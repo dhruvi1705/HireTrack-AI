@@ -206,11 +206,11 @@ erDiagram
 
 &#x20;   USERS {
 
-&#x20;       int id PK
+&#x20;       int id
 
 &#x20;       string full\_name
 
-&#x20;       string email UK
+&#x20;       string email
 
 &#x20;       string password\_hash
 
@@ -224,7 +224,7 @@ erDiagram
 
 &#x20;   COMPANIES {
 
-&#x20;       int id PK
+&#x20;       int id
 
 &#x20;       string name
 
@@ -242,9 +242,9 @@ erDiagram
 
 &#x20;   JOBS {
 
-&#x20;       int id PK
+&#x20;       int id
 
-&#x20;       int company\_id FK
+&#x20;       int company\_id
 
 &#x20;       string title
 
@@ -268,11 +268,11 @@ erDiagram
 
 &#x20;   APPLICATIONS {
 
-&#x20;       int id PK
+&#x20;       int id
 
-&#x20;       int user\_id FK
+&#x20;       int user\_id
 
-&#x20;       int job\_id FK
+&#x20;       int job\_id
 
 &#x20;       string status
 
@@ -287,8 +287,6 @@ erDiagram
 &#x20;   }
 
 ```
-
-
 
 \---
 
