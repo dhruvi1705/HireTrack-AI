@@ -412,73 +412,53 @@ Application data includes:
 
 
 
-```text
+```mermaid
 
-User
+flowchart TB
 
-&#x20;│
+&#x20;   U\[User]
 
-&#x20;│ Register
 
-&#x20;▼
 
-FastAPI
+&#x20;   R\[Register]
 
-&#x20;│
+&#x20;   V\[Validate Input]
 
-&#x20;│ Validate input
+&#x20;   H\[Password Hashing]
 
-&#x20;▼
+&#x20;   D\[(PostgreSQL)]
 
-Password Hashing
 
-&#x20;│
 
-&#x20;▼
+&#x20;   L\[Login]
 
-PostgreSQL
+&#x20;   VP\[Verify Password]
 
-&#x20;│
+&#x20;   JWT\[Generate JWT]
 
-&#x20;│
+&#x20;   AUTH\[Authenticated API Requests]
 
-&#x20;│ Login
 
-&#x20;▼
 
-Verify Password
+&#x20;   U --> R
 
-&#x20;│
+&#x20;   R --> V
 
-&#x20;▼
+&#x20;   V --> H
 
-Generate JWT
+&#x20;   H --> D
 
-&#x20;│
 
-&#x20;▼
 
-Authenticated API Requests
+&#x20;   U --> L
+
+&#x20;   L --> VP
+
+&#x20;   VP --> JWT
+
+&#x20;   JWT --> AUTH
 
 ```
-
-
-
-Protected endpoints require a Bearer token.
-
-
-
-Example:
-
-
-
-```text
-
-Authorization: Bearer <JWT\_TOKEN>
-
-```
-
-
 
 \---
 
@@ -496,7 +476,7 @@ Authorization: Bearer <JWT\_TOKEN>
 
 |--------|----------|-------------|
 
-| POST | `/api/auth/register` | Register a user |
+| POST | `/api/auth/register` | Register a new user |
 
 | POST | `/api/auth/login` | Login and receive JWT |
 
@@ -570,7 +550,7 @@ Authorization: Bearer <JWT\_TOKEN>
 
 
 
-HireTrack AI uses FastAPI's automatically generated API documentation.
+HireTrack AI uses FastAPI's automatically generated OpenAPI documentation.
 
 
 
@@ -586,13 +566,13 @@ http://127.0.0.1:8000/docs
 
 
 
-The Swagger UI allows developers to:
+Swagger UI allows developers to:
 
 
 
 \- Explore API endpoints
 
-\- Test requests
+\- Test API requests
 
 \- Authenticate using JWT
 
@@ -680,7 +660,7 @@ HireTrack-AI/
 
 
 
-\### 1. Clone the repository
+\### 1. Clone the Repository
 
 
 
@@ -866,17 +846,17 @@ npm run dev
 
 
 
-The project currently implements:
+The current backend implements:
 
 
 
 \- JWT authentication
 
-\- Password hashing
+\- Bcrypt password hashing
 
 \- Protected application endpoints
 
-\- Input validation using Pydantic
+\- Pydantic input validation
 
 \- Email validation
 
@@ -1052,69 +1032,97 @@ Provide insights such as:
 
 
 
-```text
+```mermaid
 
-Phase 1 ─ Core Backend
+flowchart LR
 
-&#x20;  ✓ FastAPI
+&#x20;   P1\[Phase 1<br/>Core Backend]
 
-&#x20;  ✓ PostgreSQL
+&#x20;   P2\[Phase 2<br/>Frontend]
 
-&#x20;  ✓ SQLAlchemy
+&#x20;   P3\[Phase 3<br/>AI Integration]
 
-&#x20;  ✓ Alembic
-
-&#x20;  ✓ Authentication
-
-&#x20;  ✓ Companies
-
-&#x20;  ✓ Jobs
-
-&#x20;  ✓ Applications
+&#x20;   P4\[Phase 4<br/>Production]
 
 
 
-Phase 2 ─ Frontend
+&#x20;   P1 --> P2
 
-&#x20;  ├── Authentication UI
+&#x20;   P2 --> P3
 
-&#x20;  ├── Dashboard
-
-&#x20;  ├── Job management
-
-&#x20;  ├── Application Kanban
-
-&#x20;  └── Analytics
-
-
-
-Phase 3 ─ AI Integration
-
-&#x20;  ├── Resume parsing
-
-&#x20;  ├── Job matching
-
-&#x20;  ├── Skill gap analysis
-
-&#x20;  ├── Resume tailoring
-
-&#x20;  └── Interview assistant
-
-
-
-Phase 4 ─ Production
-
-&#x20;  ├── Docker
-
-&#x20;  ├── CI/CD
-
-&#x20;  ├── Testing
-
-&#x20;  ├── Deployment
-
-&#x20;  └── Monitoring
+&#x20;   P3 --> P4
 
 ```
+
+
+
+\### Phase 1 — Core Backend
+
+
+
+\- FastAPI
+
+\- PostgreSQL
+
+\- SQLAlchemy
+
+\- Alembic
+
+\- Authentication
+
+\- Companies
+
+\- Jobs
+
+\- Applications
+
+
+
+\### Phase 2 — Frontend
+
+
+
+\- Authentication UI
+
+\- Dashboard
+
+\- Job management
+
+\- Application Kanban
+
+\- Analytics
+
+
+
+\### Phase 3 — AI Integration
+
+
+
+\- Resume parsing
+
+\- Job matching
+
+\- Skill gap analysis
+
+\- Resume tailoring
+
+\- Interview assistant
+
+
+
+\### Phase 4 — Production
+
+
+
+\- Docker
+
+\- CI/CD
+
+\- Automated testing
+
+\- Deployment
+
+\- Monitoring
 
 
 
@@ -1146,11 +1154,11 @@ B.Tech – Full-Stack Development
 
 
 
-GitHub: `YOUR\_GITHUB\_USERNAME`
+GitHub: `https://github.com/dhruvi1705`
 
 
 
-Portfolio: `YOUR\_PORTFOLIO\_URL`
+Portfolio: `https://dhruvi1705.github.io/portfolio/`
 
 
 
