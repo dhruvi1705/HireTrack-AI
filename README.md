@@ -194,101 +194,57 @@ The current HireTrack AI database contains four core entities: Users, Companies,
 
 ```mermaid
 
-erDiagram
+flowchart LR
 
-&#x20;   USERS ||--o{ APPLICATIONS : submits
+&#x20;   U\[Users]
 
-&#x20;   COMPANIES ||--o{ JOBS : offers
+&#x20;   C\[Companies]
 
-&#x20;   JOBS ||--o{ APPLICATIONS : receives
+&#x20;   J\[Jobs]
 
-
-
-&#x20;   USERS {
-
-&#x20;       int id
-
-&#x20;       string full\_name
-
-&#x20;       string email
-
-&#x20;       string password\_hash
-
-&#x20;       datetime created\_at
-
-&#x20;       datetime updated\_at
-
-&#x20;   }
+&#x20;   A\[Applications]
 
 
 
-&#x20;   COMPANIES {
+&#x20;   C -->|has many| J
 
-&#x20;       int id
+&#x20;   U -->|submits| A
 
-&#x20;       string name
-
-&#x20;       string website
-
-&#x20;       string location
-
-&#x20;       datetime created\_at
-
-&#x20;       datetime updated\_at
-
-&#x20;   }
-
-
-
-&#x20;   JOBS {
-
-&#x20;       int id
-
-&#x20;       int company\_id
-
-&#x20;       string title
-
-&#x20;       string description
-
-&#x20;       string location
-
-&#x20;       string employment\_type
-
-&#x20;       int salary\_min
-
-&#x20;       int salary\_max
-
-&#x20;       datetime created\_at
-
-&#x20;       datetime updated\_at
-
-&#x20;   }
-
-
-
-&#x20;   APPLICATIONS {
-
-&#x20;       int id
-
-&#x20;       int user\_id
-
-&#x20;       int job\_id
-
-&#x20;       string status
-
-&#x20;       datetime applied\_at
-
-&#x20;       string notes
-
-&#x20;       datetime created\_at
-
-&#x20;       datetime updated\_at
-
-&#x20;   }
+&#x20;   J -->|receives| A
 
 ```
 
-\---
+
+
+\### Core Tables
+
+
+
+| Table | Purpose |
+
+|---|---|
+
+| Users | Stores registered user accounts and authentication information |
+
+| Companies | Stores company information |
+
+| Jobs | Stores job opportunities linked to companies |
+
+| Applications | Stores user applications and their current status |
+
+
+
+\### Relationships
+
+
+
+\- \*\*Company → Jobs:\*\* One company can have multiple job listings.
+
+\- \*\*User → Applications:\*\* One user can submit multiple applications.
+
+\- \*\*Job → Applications:\*\* One job can receive multiple applications.
+
+\- \*\*Applications\*\* connects users with the jobs they apply for.---
 
 
 
