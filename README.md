@@ -344,68 +344,39 @@ Supported operations:
 
 
 
-\### 📋 Application Tracking
-
-
+### 📋 Application Tracking
 
 Users can track their applications through different stages:
 
+```mermaid
+flowchart TB
+    S[Saved]
+    A[Applied]
+    SC[Screening]
+    I[Interview]
+    O[Offer]
 
-
-```text
-
-Saved
-
-&#x20; ↓
-
-Applied
-
-&#x20; ↓
-
-Screening
-
-&#x20; ↓
-
-Interview
-
-&#x20; ↓
-
-Offer
-
+    S --> A
+    A --> SC
+    SC --> I
+    I --> O
 ```
-
-
 
 Other supported states include:
 
-
-
-\- Rejected
-
-\- Withdrawn
-
-
+- Rejected
+- Withdrawn
 
 Application data includes:
 
+- Job
+- Status
+- Application date
+- Notes
+- Created date
+- Updated date
 
-
-\- Job
-
-\- Status
-
-\- Application date
-
-\- Notes
-
-\- Created date
-
-\- Updated date
-
-
-
-\---
-
+---
 
 
 \## 🔑 Authentication Flow
