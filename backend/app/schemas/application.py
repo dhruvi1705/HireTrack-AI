@@ -11,7 +11,11 @@ class ApplicationCreate(BaseModel):
 
 
 class ApplicationUpdate(BaseModel):
-    status: str | None = Field(default=None, min_length=2, max_length=50)
+    status: str | None = Field(
+        default=None,
+        min_length=2,
+        max_length=50,
+    )
     applied_at: datetime | None = None
     notes: str | None = None
 
@@ -22,8 +26,13 @@ class ApplicationResponse(BaseModel):
     id: int
     user_id: int
     job_id: int
+
+    job_title: str | None = None
+    company_name: str | None = None
+
     status: str
     applied_at: datetime | None
     notes: str | None
+
     created_at: datetime
     updated_at: datetime

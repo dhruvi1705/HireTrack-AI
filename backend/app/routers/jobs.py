@@ -64,9 +64,25 @@ def create_job(
 def get_jobs(
     db: Session = Depends(get_db),
 ):
-    result = db.execute(select(Job).order_by(Job.id.desc()))
+    result = db.execute(
+        select(Job, Company)
+        .join(
+            Company,
+            Job.company_id == Company.id,
+        )
+        .order_by(Job.id.desc())
+    )
 
-    return result.scalars().all()
+    jobs = []
+
+    for job, company in result.all():
+        job_data = JobResponse.model_validate(job)
+
+        job_data.company_name = company.name
+
+        jobs.append(job_data)
+
+    return jobs
 
 
 @router.get(
@@ -77,15 +93,28 @@ def get_job(
     job_id: int,
     db: Session = Depends(get_db),
 ):
-    job = db.get(Job, job_id)
+    result = db.execute(
+        select(Job, Company)
+        .join(
+            Company,
+            Job.company_id == Company.id,
+        )
+        .where(Job.id == job_id)
+    ).first()
 
-    if job is None:
+    if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Job not found",
         )
 
-    return job
+    job, company = result
+
+    job_data = JobResponse.model_validate(job)
+
+    job_data.company_name = company.name
+
+    return job_data
 
 
 @router.put(
@@ -108,7 +137,10 @@ def update_job(
     update_data = job_data.model_dump(exclude_unset=True)
 
     if "company_id" in update_data:
-        company = db.get(Company, update_data["company_id"])
+        company = db.get(
+            Company,
+            update_data["company_id"],
+        )
 
         if company is None:
             raise HTTPException(
@@ -116,8 +148,15 @@ def update_job(
                 detail="Company not found",
             )
 
-    new_salary_min = update_data.get("salary_min", job.salary_min)
-    new_salary_max = update_data.get("salary_max", job.salary_max)
+    new_salary_min = update_data.get(
+        "salary_min",
+        job.salary_min,
+    )
+
+    new_salary_max = update_data.get(
+        "salary_max",
+        job.salary_max,
+    )
 
     if (
         new_salary_min is not None
@@ -135,7 +174,17 @@ def update_job(
     db.commit()
     db.refresh(job)
 
-    return job
+    company = db.get(
+        Company,
+        job.company_id,
+    )
+
+    job_response = JobResponse.model_validate(job)
+
+    if company:
+        job_response.company_name = company.name
+
+    return job_response
 
 
 @router.delete(

@@ -32,3 +32,4 @@ class JobResponse(JobBase):
 
     id: int
     created_at: datetime
+    company_name: str | None = None

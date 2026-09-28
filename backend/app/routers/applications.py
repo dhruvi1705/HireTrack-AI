@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.application import Application
+from app.models.company import Company
 from app.models.job import Job
 from app.models.user import User
 from app.schemas.application import (
@@ -30,6 +31,19 @@ VALID_STATUSES = {
 }
 
 
+def build_application_response(
+    application: Application,
+    job: Job,
+    company: Company,
+) -> ApplicationResponse:
+    response = ApplicationResponse.model_validate(application)
+
+    response.job_title = job.title
+    response.company_name = company.name
+
+    return response
+
+
 @router.post(
     "/",
     response_model=ApplicationResponse,
@@ -48,10 +62,21 @@ def create_application(
             detail="Job not found",
         )
 
+    company = db.get(Company, job.company_id)
+
+    if company is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Company not found",
+        )
+
     if application_data.status not in VALID_STATUSES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid application status. Allowed statuses: {sorted(VALID_STATUSES)}",
+            detail=(
+                "Invalid application status. "
+                f"Allowed statuses: {sorted(VALID_STATUSES)}"
+            ),
         )
 
     application = Application(
@@ -66,7 +91,11 @@ def create_application(
     db.commit()
     db.refresh(application)
 
-    return application
+    return build_application_response(
+        application,
+        job,
+        company,
+    )
 
 
 @router.get(
@@ -78,12 +107,31 @@ def get_applications(
     db: Session = Depends(get_db),
 ):
     result = db.execute(
-        select(Application)
+        select(Application, Job, Company)
+        .join(
+            Job,
+            Application.job_id == Job.id,
+        )
+        .join(
+            Company,
+            Job.company_id == Company.id,
+        )
         .where(Application.user_id == current_user.id)
         .order_by(Application.id.desc())
     )
 
-    return result.scalars().all()
+    applications = []
+
+    for application, job, company in result.all():
+        applications.append(
+            build_application_response(
+                application,
+                job,
+                company,
+            )
+        )
+
+    return applications
 
 
 @router.get(
@@ -95,20 +143,35 @@ def get_application(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    application = db.execute(
-        select(Application).where(
+    result = db.execute(
+        select(Application, Job, Company)
+        .join(
+            Job,
+            Application.job_id == Job.id,
+        )
+        .join(
+            Company,
+            Job.company_id == Company.id,
+        )
+        .where(
             Application.id == application_id,
             Application.user_id == current_user.id,
         )
-    ).scalar_one_or_none()
+    ).first()
 
-    if application is None:
+    if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Application not found",
         )
 
-    return application
+    application, job, company = result
+
+    return build_application_response(
+        application,
+        job,
+        company,
+    )
 
 
 @router.put(
@@ -140,7 +203,10 @@ def update_application(
         if update_data["status"] not in VALID_STATUSES:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid application status. Allowed statuses: {sorted(VALID_STATUSES)}",
+                detail=(
+                    "Invalid application status. "
+                    f"Allowed statuses: {sorted(VALID_STATUSES)}"
+                ),
             )
 
     for field, value in update_data.items():
@@ -149,7 +215,27 @@ def update_application(
     db.commit()
     db.refresh(application)
 
-    return application
+    job = db.get(Job, application.job_id)
+
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Job not found",
+        )
+
+    company = db.get(Company, job.company_id)
+
+    if company is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Company not found",
+        )
+
+    return build_application_response(
+        application,
+        job,
+        company,
+    )
 
 
 @router.delete(
