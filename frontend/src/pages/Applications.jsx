@@ -11,6 +11,7 @@ import {
 
 import applicationService from "../services/applicationService";
 import AddApplication from "../components/AddApplication";
+import "./Applications.css";
 
 const STATUS_LABELS = {
   saved: "Not Started",
@@ -75,16 +76,28 @@ export default function Applications() {
      OPEN EDIT MODAL
      ========================================= */
 
+  const formatDateTimeLocal = (dateValue) => {
+    if (!dateValue) return "";
+    try {
+      const d = new Date(dateValue);
+      if (isNaN(d.getTime())) return "";
+      return d.toISOString().slice(0, 16);
+    } catch {
+      return "";
+    }
+  };
+
   const handleViewApplication = (application) => {
+    if (!application) return;
     setSelectedApplication(application);
 
     setEditError("");
 
     setEditForm({
       status: application.status || "applied",
-      applied_at: application.applied_at
-        ? new Date(application.applied_at).toISOString().slice(0, 16)
-        : "",
+      applied_at: formatDateTimeLocal(
+        application.applied_at || application.created_at
+      ),
       notes: application.notes || "",
     });
   };
@@ -214,7 +227,7 @@ export default function Applications() {
           onClick={() => setShowAddApplication(true)}
         >
           <Plus size={17} />
-          Add Application
+          Add New Application
         </button>
       </section>
 
@@ -287,63 +300,68 @@ export default function Applications() {
         ) : (
           <div className="applications-grid">
             {filteredApplications.map((application) => (
-              <article className="application-card" key={application.id}>
-                {/* CARD TOP */}
+              <article
+                className="application-card"
+                key={application.id}
+                onClick={() => handleViewApplication(application)}
+              >
 
-                <div className="application-card-top">
-                  <div className="company-logo">
-                    {application.company_name
-                      ? application.company_name.charAt(0)
-                      : "C"}
-                  </div>
+  {/* COMPANY LOGO */}
+  <div className="company-logo">
+    {application.company_name
+      ? application.company_name.charAt(0)
+      : "C"}
+  </div>
 
-                  <span
-                    className={`application-status status-${application.status}`}
-                  >
-                    {STATUS_LABELS[application.status] || application.status}
-                  </span>
-                </div>
+  {/* JOB INFORMATION */}
+  <div className="application-main">
+    <h3>
+      {application.job_title || `Job #${application.job_id}`}
+    </h3>
 
-                {/* JOB */}
+    <p className="application-company">
+      <Building2 size={15} />
+      {application.company_name || "Company"}
+    </p>
+  </div>
 
-                <h3>{application.job_title || `Job #${application.job_id}`}</h3>
+  {/* STATUS + DATE */}
+  <div className="application-meta">
 
-                {/* COMPANY */}
+    <span
+      className={`application-status status-${application.status}`}
+    >
+      {STATUS_LABELS[application.status] || application.status}
+    </span>
 
-                <p className="application-company">
-                  <Building2 size={15} />
+    <p className="application-date">
+      <CalendarDays size={15} />
+      {formatDate(application.applied_at)}
+    </p>
 
-                  {application.company_name || "Company"}
-                </p>
+  </div>
 
-                {/* DATE */}
+  {/* ACTION */}
+  <div className="application-card-footer">
 
-                <p className="application-date">
-                  <CalendarDays size={15} />
+    <span className="application-number">
+      Application #{application.id}
+    </span>
 
-                  {formatDate(application.applied_at)}
-                </p>
+    <button
+      type="button"
+      className="view-job-button"
+      onClick={(e) => {
+        e.stopPropagation();
+        handleViewApplication(application);
+      }}
+    >
+      View
+    </button>
 
-                {/* NOTES */}
+  </div>
 
-                {application.notes && (
-                  <p className="application-notes">{application.notes}</p>
-                )}
-
-                {/* FOOTER */}
-
-                <div className="application-card-footer">
-                  <span>Application #{application.id}</span>
-
-                  <button
-                    type="button"
-                    className="view-job-button"
-                    onClick={() => handleViewApplication(application)}
-                  >
-                    View
-                  </button>
-                </div>
-              </article>
+</article>
             ))}
           </div>
         )}

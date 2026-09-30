@@ -2,6 +2,7 @@ import { useState } from "react";
 import { BriefcaseBusiness, Lock, Mail, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
+import "./Login.css";
 
 export default function Login() {
   const navigate = useNavigate();

@@ -3,6 +3,7 @@ import { X, Plus } from "lucide-react";
 
 import applicationService from "../services/applicationService";
 import jobService from "../services/jobService";
+import "./AddApplication.css";
 
 export default function AddApplication({ onClose, onCreated }) {
   const [jobs, setJobs] = useState([]);

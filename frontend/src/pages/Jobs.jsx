@@ -3,6 +3,7 @@ import { Plus, Search, BriefcaseBusiness } from "lucide-react";
 
 import jobService from "../services/jobService";
 import AddJob from "../components/AddJob";
+import "./Jobs.css";
 
 export default function Jobs() {
   const [jobs, setJobs] = useState([]);

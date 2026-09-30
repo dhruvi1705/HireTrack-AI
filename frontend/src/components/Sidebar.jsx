@@ -7,7 +7,8 @@ import {
   Sparkles,
   ChevronDown,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink} from "react-router-dom";
+import "./Sidebar.css";
 
 const navItems = [
   {
@@ -56,17 +57,18 @@ export default function Sidebar() {
         {/* Navigation */}
         <nav className="main-nav">
           {navItems.map(({ label, path, icon: Icon }) => (
-            <NavLink
-              key={path}
-              to={path}
-              className={({ isActive }) =>
-                `nav-link ${isActive ? "active" : ""}`
-              }
-            >
-              <Icon size={17} strokeWidth={2} />
-              {label}
-            </NavLink>
-          ))}
+  <NavLink
+    key={path}
+    to={path}
+    end={path === "/"}
+    className={({ isActive }) =>
+      `nav-link ${isActive ? "active" : ""}`
+    }
+  >
+    <Icon size={17} strokeWidth={2} />
+    {label}
+  </NavLink>
+))}
         </nav>
 
         {/* Right side */}

@@ -1,0 +1,201 @@
+/* =========================================================
+   APPLICATIONS PAGE
+   ========================================================= */
+
+.applications-page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-sizing: border-box;
+}
+
+.applications-toolbar {
+  width: 100%;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  box-shadow: 5px 5px 0 var(--shadow);
+  box-sizing: border-box;
+  flex-wrap: wrap;
+}
+
+.applications-list {
+  width: 100%;
+  padding: 24px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  box-shadow: 5px 5px 0 var(--shadow);
+  box-sizing: border-box;
+}
+
+.applications-grid {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.application-card {
+  position: relative;
+  width: 100%;
+  min-height: 88px;
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: 48px minmax(200px, 2fr) minmax(160px, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  box-shadow: 4px 4px 0 var(--shadow);
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.application-card:hover {
+  background: var(--bg);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--shadow);
+}
+
+.application-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.application-main h3 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.3;
+  font-weight: 800;
+  color: var(--text);
+  overflow-wrap: break-word;
+}
+
+.application-company {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.application-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.application-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 13px;
+  font-family: "DM Mono", monospace;
+}
+
+.application-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.application-card-footer .view-job-button {
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.application-number {
+  color: var(--text-soft);
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* Edit Application Info Section in Modal */
+.application-edit-info {
+  width: 100%;
+  padding: 12px 28px 0;
+  box-sizing: border-box;
+}
+
+.application-edit-info h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.application-edit-info p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1000px) {
+  .application-card {
+    grid-template-columns: 48px minmax(180px, 2fr) minmax(120px, 1fr) auto;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 750px) {
+  .applications-page {
+    gap: 18px;
+  }
+
+  .applications-toolbar {
+    padding: 16px;
+  }
+
+  .applications-list {
+    padding: 18px;
+  }
+
+  .application-card {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .application-date,
+  .application-number {
+    display: none;
+  }
+}
+
+@media (max-width: 500px) {
+  .applications-list {
+    padding: 14px;
+  }
+
+  .application-card {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .application-edit-info {
+    padding: 8px 18px 0;
+  }
+}

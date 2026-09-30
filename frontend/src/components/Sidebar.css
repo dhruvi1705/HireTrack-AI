@@ -1,0 +1,486 @@
+/* =========================================================
+   TOP NAVIGATION
+   ========================================================= */
+
+.top-nav {
+  width: 100%;
+  max-width: 100%;
+  padding: 18px 24px 0;
+  background: var(--bg);
+  box-sizing: border-box;
+}
+
+.top-nav-inner {
+  width: 100%;
+  max-width: 1440px;
+  min-height: 70px;
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  padding: 10px 16px;
+
+  background: var(--surface);
+  border: 2px solid var(--border);
+  box-shadow: 5px 5px 0 var(--shadow);
+
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  flex-shrink: 0;
+
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+
+  color: var(--text);
+  text-decoration: none;
+}
+
+.brand-icon {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  background: var(--yellow);
+  border: 2px solid var(--border);
+}
+
+/* =========================================================
+   MAIN NAVIGATION
+   ========================================================= */
+
+.main-nav {
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+
+  flex: 1;
+  min-width: 0;
+
+  /* IMPORTANT:
+     Do NOT make this horizontally scrollable. */
+  overflow: visible;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex-wrap: nowrap;
+}
+
+.nav-link,
+.ai-nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 9px 12px;
+
+  border: 2px solid transparent;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  color: var(--text);
+  text-decoration: none;
+
+  white-space: nowrap;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.nav-link:hover,
+.ai-nav-link:hover {
+  background: var(--bg);
+  border-color: var(--border);
+}
+
+/* ACTIVE PAGE */
+
+.nav-link.active {
+  background: var(--yellow);
+  border-color: var(--border);
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+
+/* =========================================================
+   RIGHT SIDE
+   ========================================================= */
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 8px;
+
+  flex-shrink: 0;
+}
+
+.ai-nav-link {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+/* =========================================================
+   PROFILE
+   ========================================================= */
+
+.profile-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 5px 8px;
+
+  background: transparent;
+  border: 0;
+
+  color: var(--text);
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+}
+
+.profile-avatar {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border: 2px solid var(--border);
+  background: var(--yellow);
+
+  font-weight: 800;
+  font-size: 14px;
+}
+
+/* =========================================================
+   RESPONSIVE NAVIGATION
+   ========================================================= */
+
+/* ---------- Medium screens ---------- */
+
+@media (max-width: 1150px) {
+  .top-nav {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .top-nav-inner {
+    gap: 12px;
+  }
+
+  .brand {
+    font-size: 18px;
+  }
+
+  .nav-link,
+  .ai-nav-link {
+    padding: 8px 9px;
+    font-size: 13px;
+  }
+
+  .main-nav {
+    gap: 2px;
+  }
+}
+
+
+/* =========================================================
+   TABLET / NARROW DESKTOP
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .top-nav {
+    padding: 12px 12px 0;
+  }
+
+  .top-nav-inner {
+    width: 100%;
+    min-width: 0;
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand profile"
+      "nav nav";
+
+    gap: 10px;
+
+    padding: 10px 12px;
+  }
+
+  /* Brand */
+
+  .brand {
+    grid-area: brand;
+    min-width: 0;
+  }
+
+  /* Profile / AI tools */
+
+  .nav-right {
+    grid-area: profile;
+
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 6px;
+  }
+
+  /* Main navigation */
+
+  .main-nav {
+    grid-area: nav;
+
+    width: 100%;
+    min-width: 0;
+
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 5px;
+
+    overflow: visible;
+  }
+
+  .nav-link {
+    flex: 0 0 auto;
+  }
+}
+
+
+/* =========================================================
+   SMALL TABLET / SPLIT SCREEN
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .top-nav {
+    width: 100%;
+    max-width: 100%;
+
+    padding: 8px 8px 0;
+
+    box-sizing: border-box;
+  }
+
+  .top-nav-inner {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    display: grid;
+
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "brand"
+      "profile"
+      "nav";
+
+    gap: 8px;
+
+    padding: 10px;
+
+    box-sizing: border-box;
+  }
+
+  /* ---------- Brand ---------- */
+
+  .brand {
+    grid-area: brand;
+
+    width: 100%;
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+
+    overflow: hidden;
+  }
+
+  .brand span {
+    min-width: 0;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    font-size: 18px;
+  }
+
+  /* ---------- Right controls ---------- */
+
+  .nav-right {
+    grid-area: profile;
+
+    width: 100%;
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    gap: 6px;
+  }
+
+  .ai-nav-link {
+    flex: 0 0 auto;
+  }
+
+  .profile-button {
+    flex: 0 0 auto;
+  }
+
+  /* ---------- Main navigation ---------- */
+
+  .main-nav {
+    grid-area: nav;
+
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    display: flex;
+    flex-wrap: wrap;
+
+    align-items: center;
+    justify-content: flex-start;
+
+    gap: 5px;
+
+    overflow: visible;
+  }
+
+  .nav-link {
+    flex: 0 0 auto;
+
+    max-width: 100%;
+
+    box-sizing: border-box;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 550px) {
+  .top-nav {
+    padding: 6px 6px 0;
+  }
+
+  .top-nav-inner {
+    padding: 8px;
+
+    gap: 7px;
+  }
+
+  /* Brand */
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .brand span {
+    font-size: 17px;
+  }
+
+  /* Right side */
+
+  .nav-right {
+    justify-content: flex-start;
+  }
+
+  .ai-nav-link {
+    padding: 8px 10px;
+  }
+
+  .profile-button {
+    padding: 4px 6px;
+  }
+
+  /* Navigation */
+
+  .main-nav {
+    gap: 4px;
+  }
+
+  .nav-link {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 400px) {
+  .top-nav-inner {
+    padding: 7px;
+
+    gap: 6px;
+  }
+
+  .brand span {
+    font-size: 16px;
+  }
+
+  .brand-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .profile-name {
+    display: none;
+  }
+
+  .ai-nav-link {
+    padding: 7px 8px;
+  }
+
+  .nav-link {
+    padding: 7px 8px;
+    font-size: 12px;
+  }
+}

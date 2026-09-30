@@ -1,0 +1,32 @@
+/* =========================================================
+   HIRETRACK AI — DESIGN SYSTEM VARIABLES
+   LIGHT NEO-BRUTALIST PALETTE (JOBS AS SOURCE OF TRUTH)
+   ========================================================= */
+
+:root {
+  --bg: #f7f3ee;
+  --surface: #fffdf9;
+  --surface-soft: #f4ece2;
+
+  --text: #29231f;
+  --text-soft: #75685d;
+  --muted: #75685d;
+
+  --border: #29231f;
+
+  --primary: #f7cf55;
+  --primary-hover: #f5c43d;
+  --yellow: #f7cf55;
+  --cream: #f7f3ee;
+  --peach: #f7ddd2;
+  --sage: #dce8d5;
+  --blue: #dce8f2;
+  --lavender: #e8dfed;
+  --brown-soft: #f0e8de;
+
+  --danger: #f7ddd2;
+  --success: #dce8d5;
+
+  --shadow: #29231f;
+  --radius: 0px;
+}

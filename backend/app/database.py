@@ -39,4 +39,4 @@ def get_db():
         db.close()
 
 
-from app import models
+from app.models import User, Company, Job, Application, Interview

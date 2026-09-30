@@ -3,6 +3,7 @@ import { Plus, X } from "lucide-react";
 
 import jobService from "../services/jobService";
 import companyService from "../services/companyService";
+import "./AddJob.css";
 
 export default function AddJob({ onClose, onCreated }) {
   const [companies, setCompanies] = useState([]);

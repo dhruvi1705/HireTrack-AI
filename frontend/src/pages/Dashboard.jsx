@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowUpRight,
   BriefcaseBusiness,
@@ -13,35 +12,144 @@ import {
   Sparkles,
   Trophy,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import dashboardService from "../services/dashboardService";
+import applicationService from "../services/applicationService";
 import AddApplication from "../components/AddApplication";
+import "./Dashboard.css";
+
+const STATUS_LABELS = {
+  saved: "Not Started",
+  applied: "Applied",
+  screening: "Screening",
+  interview: "Interview",
+  offer: "Offered",
+  rejected: "Rejected",
+  withdrawn: "Withdrawn",
+};
+
+const PIPELINE_COLUMNS = [
+  {
+    title: "Not Started",
+    status: "saved",
+    color: "neutral",
+  },
+  {
+    title: "Applied",
+    status: "applied",
+    color: "peach",
+  },
+  {
+    title: "Screening",
+    status: "screening",
+    color: "blue",
+  },
+  {
+    title: "Interview",
+    status: "interview",
+    color: "sage",
+  },
+  {
+    title: "Offered",
+    status: "offer",
+    color: "yellow",
+  },
+];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+
   const [dashboardData, setDashboardData] = useState(null);
+  const [applications, setApplications] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const [showAddApplication, setShowAddApplication] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
+
+  const loadDashboard = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const [summary, applicationData] = await Promise.all([
+        dashboardService.getSummary(),
+        applicationService.getApplications(),
+      ]);
+
+      setDashboardData(summary);
+      setApplications(applicationData || []);
+    } catch (error) {
+      console.error("Dashboard loading failed:", error);
+
+      setError(
+        error.response?.data?.detail ||
+          "Unable to load dashboard data."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        const data = await dashboardService.getSummary();
-
-        setDashboardData(data);
-      } catch (error) {
-        console.error("Dashboard loading failed:", error);
-
-        setError(
-          error.response?.data?.detail || "Unable to load dashboard data.",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadDashboard();
   }, []);
+
+  const handleApplicationCreated = async () => {
+    setShowAddApplication(false);
+    await loadDashboard();
+  };
+
+  const handleViewApplications = () => {
+    navigate("/applications");
+  };
+
+  const handleOpenApplication = () => {
+    navigate("/applications");
+  };
+
+  const searchFilteredApplications = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
+
+    return applications.filter((application) => {
+      const jobTitle = application.job_title || "";
+      const companyName = application.company_name || "";
+      const notes = application.notes || "";
+
+      return (
+        !search ||
+        jobTitle.toLowerCase().includes(search) ||
+        companyName.toLowerCase().includes(search) ||
+        notes.toLowerCase().includes(search)
+      );
+    });
+  }, [applications, searchTerm]);
+
+  const visibleColumns = useMemo(() => {
+    if (activeFilter === "all") {
+      return PIPELINE_COLUMNS;
+    }
+    return PIPELINE_COLUMNS.filter((col) => col.status === activeFilter);
+  }, [activeFilter]);
+
+  const getApplicationsByStatus = (status) => {
+    return searchFilteredApplications.filter(
+      (application) => application.status === status
+    );
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "Not specified";
+
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
 
   if (loading) {
     return (
@@ -56,13 +164,16 @@ export default function Dashboard() {
   if (error) {
     return (
       <div className="dashboard page-container">
-        <div className="brutalist-card dashboard-error">{error}</div>
+        <div className="brutalist-card dashboard-error">
+          {error}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="dashboard page-container">
+
       {/* HERO */}
       <section className="dashboard-hero brutalist-card">
         <div className="hero-copy">
@@ -81,14 +192,16 @@ export default function Dashboard() {
               Add Application
             </button>
 
-            <button className="brutalist-button">
+            <button
+              className="brutalist-button"
+              onClick={() => navigate("/jobs")}
+            >
               Explore Jobs
               <ArrowUpRight size={17} />
             </button>
           </div>
         </div>
 
-        {/* Decorative career illustration */}
         <div className="hero-illustration">
           <div className="illustration-star">✦</div>
 
@@ -109,12 +222,9 @@ export default function Dashboard() {
 
           <div className="illustration-paper">
             <span>JOB</span>
-
             <strong>TRACKER</strong>
-
             <div className="paper-line" />
             <div className="paper-line short" />
-
             <div className="paper-check">✓</div>
           </div>
 
@@ -136,7 +246,7 @@ export default function Dashboard() {
 
       {/* QUICK STATS */}
       <section className="stats-grid">
-        {/* Applications */}
+
         <div className="stat-card brutalist-card">
           <div className="stat-icon peach">
             <FileText size={22} />
@@ -149,11 +259,12 @@ export default function Dashboard() {
 
             <span className="stat-label">Applications</span>
 
-            <small className="stat-growth">Total tracked</small>
+            <small className="stat-growth">
+              Total tracked
+            </small>
           </div>
         </div>
 
-        {/* Interviews */}
         <div className="stat-card brutalist-card">
           <div className="stat-icon peach">
             <CalendarDays size={22} />
@@ -166,163 +277,280 @@ export default function Dashboard() {
 
             <span className="stat-label">Interviews</span>
 
-            <small className="stat-growth">Scheduled</small>
+            <small className="stat-growth">
+              Scheduled
+            </small>
           </div>
         </div>
 
-        {/* Offers */}
         <div className="stat-card brutalist-card">
           <div className="stat-icon sage">
             <Trophy size={22} />
           </div>
 
           <div>
-            <span className="stat-number">{dashboardData.stats.offers}</span>
+            <span className="stat-number">
+              {dashboardData.stats.offers}
+            </span>
 
             <span className="stat-label">Offers</span>
 
-            <small className="stat-growth">Current offers</small>
+            <small className="stat-growth">
+              Current offers
+            </small>
           </div>
         </div>
 
-        {/* Add Application */}
         <button
+          type="button"
           className="stat-card add-card"
           onClick={() => setShowAddApplication(true)}
         >
-          <div className="add-icon">
-            <Plus size={25} />
+          <div className="stat-icon">
+            <Plus size={22} />
           </div>
 
           <div>
-            <strong>Add New</strong>
-
-            <strong>Application</strong>
+            <span className="stat-label">Add New Application</span>
+            <small className="stat-growth">Track new entry</small>
           </div>
 
-          <ArrowUpRight size={22} />
+          <ArrowUpRight size={20} style={{ marginLeft: "auto" }} />
         </button>
       </section>
 
       {/* APPLICATION TRACKER */}
       <section className="tracker brutalist-card">
+
         <div className="tracker-header">
           <div className="tracker-title">
             <BriefcaseBusiness size={24} />
-
             <h2>Application Tracker</h2>
           </div>
 
           <div className="tracker-actions">
+
             <div className="search-box">
               <Search size={17} />
 
-              <input placeholder="Search applications..." />
+              <input
+                placeholder="Search applications..."
+                value={searchTerm}
+                onChange={(event) =>
+                  setSearchTerm(event.target.value)
+                }
+              />
             </div>
 
-            <button className="small-button">
+            <button
+              className="small-button"
+              type="button"
+              title="Clear search"
+              onClick={() => setSearchTerm("")}
+            >
               <Sparkles size={16} />
             </button>
 
-            <button className="small-button">+ View</button>
+            <button
+              className="small-button"
+              type="button"
+              onClick={handleViewApplications}
+            >
+              + View
+            </button>
           </div>
         </div>
 
         {/* FILTERS */}
         <div className="tracker-tabs">
-          <button className="tracker-tab active">All</button>
 
-          <button className="tracker-tab">Not Started</button>
+          <button
+            className={`tracker-tab ${
+              activeFilter === "all" ? "active" : ""
+            }`}
+            onClick={() => setActiveFilter("all")}
+          >
+            All
+          </button>
 
-          <button className="tracker-tab">Applied</button>
+          <button
+            className={`tracker-tab ${
+              activeFilter === "saved" ? "active" : ""
+            }`}
+            onClick={() => setActiveFilter("saved")}
+          >
+            Not Started
+          </button>
 
-          <button className="tracker-tab">Screening</button>
+          <button
+            className={`tracker-tab ${
+              activeFilter === "applied" ? "active" : ""
+            }`}
+            onClick={() => setActiveFilter("applied")}
+          >
+            Applied
+          </button>
 
-          <button className="tracker-tab">Interview</button>
+          <button
+            className={`tracker-tab ${
+              activeFilter === "screening" ? "active" : ""
+            }`}
+            onClick={() => setActiveFilter("screening")}
+          >
+            Screening
+          </button>
 
-          <button className="tracker-tab">Offered</button>
+          <button
+            className={`tracker-tab ${
+              activeFilter === "interview" ? "active" : ""
+            }`}
+            onClick={() => setActiveFilter("interview")}
+          >
+            Interview
+          </button>
+
+          <button
+            className={`tracker-tab ${
+              activeFilter === "offer" ? "active" : ""
+            }`}
+            onClick={() => setActiveFilter("offer")}
+          >
+            Offered
+          </button>
         </div>
 
         {/* PIPELINE */}
-        <div className="pipeline">
-          {[
-            {
-              title: "Not Started",
-              status: "saved",
-              color: "neutral",
-            },
-            {
-              title: "Applied",
-              status: "applied",
-              color: "peach",
-            },
-            {
-              title: "Screening",
-              status: "screening",
-              color: "blue",
-            },
-            {
-              title: "Interview",
-              status: "interview",
-              color: "sage",
-            },
-            {
-              title: "Offered",
-              status: "offer",
-              color: "yellow",
-            },
-          ].map((column) => (
-            <div
-              className={`pipeline-column ${column.color}`}
-              key={column.status}
-            >
-              <div className="pipeline-heading">
-                <div>
-                  <span className="pipeline-dot" />
+        <div className={`pipeline ${visibleColumns.length === 1 ? "single-column" : ""}`}>
 
-                  <strong>{column.title}</strong>
+          {visibleColumns.map((column) => {
+            const columnApplications =
+              getApplicationsByStatus(column.status);
 
-                  <span className="pipeline-count">
-                    {dashboardData.pipeline[column.status]}
-                  </span>
+            return (
+              <div
+                className={`pipeline-column ${column.color}`}
+                key={column.status}
+              >
+
+                <div className="pipeline-heading">
+                  <div>
+                    <span className="pipeline-dot" />
+
+                    <strong>{column.title}</strong>
+
+                    <span className="pipeline-count">
+                      {columnApplications.length}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowAddApplication(true)
+                    }
+                    title={`Add ${column.title} application`}
+                  >
+                    <Plus size={17} />
+                  </button>
                 </div>
 
-                <button>
-                  <Plus size={17} />
+                <button
+                  className="new-job"
+                  type="button"
+                  onClick={() =>
+                    setShowAddApplication(true)
+                  }
+                >
+                  <Plus size={15} />
+                  New
                 </button>
-              </div>
 
-              <button className="new-job">
-                <Plus size={15} />
-                New
-              </button>
-            </div>
-          ))}
+                {/* REAL APPLICATION CARDS */}
+                <div className="pipeline-applications">
+
+                  {columnApplications.length === 0 ? (
+                    <div className="pipeline-empty">
+                      No applications
+                    </div>
+                  ) : (
+                    columnApplications.map((application) => (
+                      <button
+                        type="button"
+                        className="pipeline-application-card"
+                        key={application.id}
+                        onClick={handleOpenApplication}
+                      >
+                        <div className="pipeline-company">
+                          <div className="company-logo">
+                            {application.company_name
+                              ? application.company_name
+                                  .charAt(0)
+                                  .toUpperCase()
+                              : "C"}
+                          </div>
+
+                          <div>
+                            <strong>
+                              {application.job_title ||
+                                `Job #${application.job_id}`}
+                            </strong>
+
+                            <span>
+                              {application.company_name ||
+                                "Company"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="pipeline-card-footer">
+                          <span>
+                            Application #{application.id}
+                          </span>
+
+                          <ChevronRight size={15} />
+                        </div>
+                      </button>
+                    ))
+                  )}
+
+                </div>
+              </div>
+            );
+          })}
+
         </div>
       </section>
 
       {/* BOTTOM SECTION */}
       <section className="bottom-grid">
+
         {/* RECENT APPLICATIONS */}
         <div className="recent-card brutalist-card">
+
           <div className="section-header">
             <div className="section-heading">
               <Clock3 size={21} />
-
               <h2>Recent Applications</h2>
             </div>
 
-            <button className="view-link">
+            <button
+              className="view-link"
+              onClick={handleViewApplications}
+            >
               View all
               <ChevronRight size={16} />
             </button>
           </div>
 
           <div className="applications-list">
-            {dashboardData.recent_applications.length === 0 ? (
-              <div className="empty-state">No applications yet.</div>
+
+            {applications.length === 0 ? (
+              <div className="empty-state">
+                No applications yet.
+              </div>
             ) : (
-              dashboardData.recent_applications.map((application) => {
+              applications.slice(0, 5).map((application) => {
+
                 const statusColors = {
                   saved: "neutral",
                   applied: "peach",
@@ -334,85 +562,128 @@ export default function Dashboard() {
                 };
 
                 return (
-                  <div className="application-row" key={application.id}>
+                  <button
+                    type="button"
+                    className="application-row"
+                    key={application.id}
+                    onClick={handleOpenApplication}
+                  >
                     <div className="company-logo">
-                      {application.company.charAt(0)}
+                      {application.company_name
+                        ? application.company_name
+                            .charAt(0)
+                            .toUpperCase()
+                        : "C"}
                     </div>
 
                     <div className="application-company">
-                      <strong>{application.company}</strong>
+                      <strong>
+                        {application.company_name ||
+                          "Company"}
+                      </strong>
                     </div>
 
-                    <div className="application-role">{application.role}</div>
+                    <div className="application-role">
+                      {application.job_title ||
+                        `Job #${application.job_id}`}
+                    </div>
 
                     <span
                       className={`status-tag ${
-                        statusColors[application.status] || "neutral"
+                        statusColors[application.status] ||
+                        "neutral"
                       }`}
                     >
-                      {application.status}
+                      {STATUS_LABELS[application.status] ||
+                        application.status}
                     </span>
 
                     <span className="application-date">
-                      {application.applied_at
-                        ? new Date(application.applied_at).toLocaleDateString()
-                        : new Date(application.created_at).toLocaleDateString()}
+                      {formatDate(
+                        application.applied_at ||
+                          application.created_at
+                      )}
                     </span>
-                  </div>
+                  </button>
                 );
               })
             )}
+
           </div>
         </div>
 
         {/* UPCOMING INTERVIEWS */}
         <div className="interviews-card brutalist-card">
+
           <div className="section-header">
             <div className="section-heading">
               <CalendarDays size={21} />
-
               <h2>Upcoming Interviews</h2>
             </div>
 
-            <button className="view-link">
+            <button
+              className="view-link"
+              onClick={handleViewApplications}
+            >
               View all
               <ChevronRight size={16} />
             </button>
           </div>
 
           <div className="interview-list">
+
             {dashboardData.upcoming_interviews.length === 0 ? (
-              <div className="empty-state">No upcoming interviews.</div>
+              <div className="empty-state">
+                No upcoming interviews.
+              </div>
             ) : (
-              dashboardData.upcoming_interviews.map((interview) => (
-                <div className="interview-item" key={interview.id}>
-                  <div className="company-logo">
-                    {interview.company.charAt(0)}
+              dashboardData.upcoming_interviews.map(
+                (interview) => (
+                  <div
+                    className="interview-item"
+                    key={interview.id}
+                  >
+                    <div className="company-logo">
+                      {interview.company
+                        ? interview.company
+                            .charAt(0)
+                            .toUpperCase()
+                        : "C"}
+                    </div>
+
+                    <div className="interview-info">
+                      <strong>
+                        {interview.company}
+                      </strong>
+
+                      <span>{interview.type}</span>
+                    </div>
+
+                    <span className="interview-date">
+                      {interview.date}
+                    </span>
+
+                    <span className="interview-time">
+                      {interview.time}
+                    </span>
                   </div>
-
-                  <div className="interview-info">
-                    <strong>{interview.company}</strong>
-
-                    <span>{interview.type}</span>
-                  </div>
-
-                  <span className="interview-date">{interview.date}</span>
-
-                  <span className="interview-time">{interview.time}</span>
-                </div>
-              ))
+                )
+              )
             )}
+
           </div>
         </div>
+
       </section>
+
+      {/* ADD APPLICATION MODAL */}
       {showAddApplication && (
         <AddApplication
           onClose={() => setShowAddApplication(false)}
-          onCreated={() => {
-            window.location.reload();
-          }}
+          onCreated={handleApplicationCreated}
         />
       )}
+
     </div>
   );
 }

@@ -1,43 +1,52 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
 
-class Application(Base):
-    __tablename__ = "applications"
+class Interview(Base):
+    __tablename__ = "interviews"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
 
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
+    application_id: Mapped[int] = mapped_column(
+        ForeignKey("applications.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
 
-    job_id: Mapped[int] = mapped_column(
-        ForeignKey("jobs.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-
-    status: Mapped[str] = mapped_column(
-        String(50),
-        default="saved",
-        nullable=False,
-        index=True,
-    )
-
-    applied_at: Mapped[datetime | None] = mapped_column(
+    interview_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
+        nullable=False,
+        index=True,
+    )
+
+    interview_type: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="technical",
+    )
+
+    meeting_link: Mapped[str | None] = mapped_column(
+        String(500),
         nullable=True,
     )
 
     notes: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        default="scheduled",
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -53,8 +62,7 @@ class Application(Base):
         nullable=False,
     )
 
-    interviews = relationship(
-        "Interview",
-        back_populates="application",
-        cascade="all, delete-orphan",
+    application = relationship(
+        "Application",
+        back_populates="interviews",
     )
