@@ -1,9 +1,11 @@
 import axios from "axios";
+import authService from "./authService";
+import { API_BASE_URL } from "./api";
 
-const API_URL = "http://127.0.0.1:8000/api/interviews";
+const API_URL = `${API_BASE_URL}/api/interviews`;
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("hiretrack_token");
+  const token = authService.getToken();
 
   return {
     headers: {

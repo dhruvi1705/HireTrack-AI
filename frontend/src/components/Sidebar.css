@@ -167,6 +167,10 @@
   white-space: nowrap;
 }
 
+.profile-wrapper {
+  position: relative;
+}
+
 .profile-avatar {
   width: 34px;
   height: 34px;
@@ -182,6 +186,63 @@
 
   font-weight: 800;
   font-size: 14px;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  box-shadow: 4px 4px 0 var(--shadow);
+  min-width: 200px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-dropdown-header {
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--border);
+  background: var(--bg);
+}
+
+.profile-dropdown-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-dropdown-email {
+  font-size: 11px;
+  color: var(--text-soft);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-logout-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+}
+
+.profile-logout-button:hover {
+  background: var(--peach);
 }
 
 /* =========================================================

@@ -18,6 +18,7 @@ from app.schemas.interview import (
 router = APIRouter(
     prefix="/api/interviews",
     tags=["Interviews"],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -47,7 +48,9 @@ def build_interview_response(
 ) -> InterviewResponse:
     response = InterviewResponse.model_validate(interview)
 
+    response.job_id = job.id
     response.job_title = job.title
+    response.job_description = job.description
     response.company_name = company.name
 
     return response
@@ -131,10 +134,10 @@ def create_interview(
 
     company = db.get(Company, job.company_id)
 
-    if company is None:
+    if company is None or company.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company not found",
+            detail="Job not found",
         )
 
     return build_interview_response(
@@ -167,7 +170,10 @@ def get_interviews(
             Company,
             Job.company_id == Company.id,
         )
-        .where(Application.user_id == current_user.id)
+        .where(
+            Application.user_id == current_user.id,
+            Company.user_id == current_user.id,
+        )
         .order_by(Interview.interview_date.asc())
     )
 
@@ -212,6 +218,7 @@ def get_interview(
         .where(
             Interview.id == interview_id,
             Application.user_id == current_user.id,
+            Company.user_id == current_user.id,
         )
     ).first()
 
@@ -299,10 +306,10 @@ def update_interview(
 
     company = db.get(Company, job.company_id)
 
-    if company is None:
+    if company is None or company.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company not found",
+            detail="Job not found",
         )
 
     return build_interview_response(

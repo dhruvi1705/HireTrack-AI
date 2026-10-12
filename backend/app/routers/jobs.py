@@ -3,13 +3,16 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.dependencies import get_current_user
 from app.models.company import Company
 from app.models.job import Job
+from app.models.user import User
 from app.schemas.job import JobCreate, JobResponse, JobUpdate
 
 router = APIRouter(
     prefix="/api/jobs",
     tags=["Jobs"],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -20,11 +23,12 @@ router = APIRouter(
 )
 def create_job(
     job_data: JobCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     company = db.get(Company, job_data.company_id)
 
-    if company is None:
+    if company is None or company.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Company not found",
@@ -54,7 +58,10 @@ def create_job(
     db.commit()
     db.refresh(job)
 
-    return job
+    job_response = JobResponse.model_validate(job)
+    job_response.company_name = company.name
+
+    return job_response
 
 
 @router.get(
@@ -62,6 +69,7 @@ def create_job(
     response_model=list[JobResponse],
 )
 def get_jobs(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     result = db.execute(
@@ -70,6 +78,7 @@ def get_jobs(
             Company,
             Job.company_id == Company.id,
         )
+        .where(Company.user_id == current_user.id)
         .order_by(Job.id.desc())
     )
 
@@ -91,6 +100,7 @@ def get_jobs(
 )
 def get_job(
     job_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     result = db.execute(
@@ -99,7 +109,10 @@ def get_job(
             Company,
             Job.company_id == Company.id,
         )
-        .where(Job.id == job_id)
+        .where(
+            Job.id == job_id,
+            Company.user_id == current_user.id,
+        )
     ).first()
 
     if result is None:
@@ -124,29 +137,43 @@ def get_job(
 def update_job(
     job_id: int,
     job_data: JobUpdate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    job = db.get(Job, job_id)
+    result = db.execute(
+        select(Job, Company)
+        .join(
+            Company,
+            Job.company_id == Company.id,
+        )
+        .where(
+            Job.id == job_id,
+            Company.user_id == current_user.id,
+        )
+    ).first()
 
-    if job is None:
+    if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Job not found",
         )
 
+    job, company = result
+
     update_data = job_data.model_dump(exclude_unset=True)
 
     if "company_id" in update_data:
-        company = db.get(
+        target_company = db.get(
             Company,
             update_data["company_id"],
         )
 
-        if company is None:
+        if target_company is None or target_company.user_id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Company not found",
             )
+        company = target_company
 
     new_salary_min = update_data.get(
         "salary_min",
@@ -174,11 +201,6 @@ def update_job(
     db.commit()
     db.refresh(job)
 
-    company = db.get(
-        Company,
-        job.company_id,
-    )
-
     job_response = JobResponse.model_validate(job)
 
     if company:
@@ -193,17 +215,31 @@ def update_job(
 )
 def delete_job(
     job_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    job = db.get(Job, job_id)
+    result = db.execute(
+        select(Job, Company)
+        .join(
+            Company,
+            Job.company_id == Company.id,
+        )
+        .where(
+            Job.id == job_id,
+            Company.user_id == current_user.id,
+        )
+    ).first()
 
-    if job is None:
+    if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Job not found",
         )
 
+    job, _ = result
+
     db.delete(job)
     db.commit()
 
     return None
+

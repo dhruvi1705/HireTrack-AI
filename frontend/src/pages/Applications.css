@@ -1,5 +1,6 @@
 /* =========================================================
-   APPLICATIONS PAGE
+   APPLICATIONS PAGE (NEO-BRUTALIST DESIGN SYSTEM)
+   VISUAL SOURCE OF TRUTH: JOBS PAGE
    ========================================================= */
 
 .applications-page {
@@ -10,18 +11,128 @@
   box-sizing: border-box;
 }
 
+/* =========================================================
+   TOOLBAR (SEARCH + STATUS FILTER TABS)
+   ========================================================= */
+
 .applications-toolbar {
   width: 100%;
   padding: 20px;
   display: flex;
-  align-items: center;
-  gap: 14px;
+  flex-direction: column;
+  gap: 16px;
   background: var(--surface);
   border: 2px solid var(--border);
   box-shadow: 5px 5px 0 var(--shadow);
   box-sizing: border-box;
+}
+
+.toolbar-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   flex-wrap: wrap;
 }
+
+.toolbar-top .search-box {
+  flex: 1;
+  max-width: 460px;
+  min-width: 240px;
+  position: relative;
+}
+
+.clear-search-btn {
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-soft);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.clear-search-btn:hover {
+  color: var(--text);
+}
+
+.status-filter-select.mobile-only-select {
+  display: none;
+  height: 42px;
+  padding: 0 12px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.status-filter-tabs {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.status-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--shadow);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  white-space: nowrap;
+}
+
+.status-tab:hover {
+  background: var(--surface-soft);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+
+.status-tab.active {
+  background: var(--yellow);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--shadow);
+}
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: rgba(41, 35, 31, 0.12);
+  border-radius: 0;
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.status-tab.active .tab-count {
+  background: var(--text);
+  color: var(--yellow);
+}
+
+/* =========================================================
+   APPLICATIONS LIST SECTION & HEADER
+   ========================================================= */
 
 .applications-list {
   width: 100%;
@@ -31,6 +142,50 @@
   box-shadow: 5px 5px 0 var(--shadow);
   box-sizing: border-box;
 }
+
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* View Mode Toggle Button */
+.view-toggle {
+  display: inline-flex;
+  align-items: center;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+
+.view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-soft);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.12s ease;
+}
+
+.view-toggle-btn.active {
+  background: var(--yellow);
+  color: var(--text);
+}
+
+.view-toggle-btn:not(.active):hover {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+/* =========================================================
+   LIST VIEW: ROW CARDS (MATCHING JOBS PAGE DESIGN)
+   ========================================================= */
 
 .applications-grid {
   width: 100%;
@@ -46,9 +201,9 @@
   position: relative;
   width: 100%;
   min-height: 88px;
-  padding: 16px 20px;
+  padding: 18px 20px;
   display: grid;
-  grid-template-columns: 48px minmax(200px, 2fr) minmax(160px, 1fr) auto;
+  grid-template-columns: 48px minmax(200px, 2fr) minmax(130px, 1fr) minmax(140px, 1fr) 80px;
   align-items: center;
   gap: 18px;
   background: var(--surface);
@@ -96,6 +251,7 @@
 .application-meta {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 6px;
 }
 
@@ -116,12 +272,6 @@
   gap: 8px;
 }
 
-.application-card-footer .view-job-button {
-  position: relative;
-  z-index: 2;
-  cursor: pointer;
-}
-
 .application-number {
   color: var(--text-soft);
   font-family: "DM Mono", monospace;
@@ -129,39 +279,295 @@
   white-space: nowrap;
 }
 
-/* Edit Application Info Section in Modal */
-.application-edit-info {
+/* =========================================================
+   BOARD VIEW (COLUMNS)
+   NO EMPTY COLUMNS SHOWN FOR FILTERED STATUSES
+   ========================================================= */
+
+.applications-board {
   width: 100%;
-  padding: 12px 28px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
   box-sizing: border-box;
 }
 
-.application-edit-info h3 {
-  margin: 0 0 4px;
-  font-size: 18px;
-  font-weight: 800;
+.applications-board.single-column {
+  grid-template-columns: minmax(0, 520px);
 }
 
-.application-edit-info p {
+.board-column {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  box-shadow: 3px 3px 0 var(--shadow);
+  box-sizing: border-box;
+}
+
+.board-column.neutral {
+  border-top: 6px solid var(--border);
+}
+
+.board-column.peach {
+  border-top: 6px solid #e89582;
+}
+
+.board-column.blue {
+  border-top: 6px solid #7da6cf;
+}
+
+.board-column.sage {
+  border-top: 6px solid #8ca681;
+}
+
+.board-column.yellow {
+  border-top: 6px solid #e0b431;
+}
+
+.board-column-header {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+}
+
+.board-column-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.board-column-dot {
+  width: 9px;
+  height: 9px;
+  background: var(--text);
+  display: inline-block;
+}
+
+.board-column-title-group h3 {
   margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.board-column-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.board-column-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.board-column-empty {
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--text-soft);
+  font-size: 12px;
+  font-family: "DM Mono", monospace;
+  border: 1.5px dashed var(--border);
+  background: var(--surface);
+}
+
+.board-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  box-shadow: 3px 3px 0 var(--shadow);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.board-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--shadow);
+}
+
+.board-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.company-logo.small {
+  width: 32px;
+  height: 32px;
   font-size: 13px;
+}
+
+.board-card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.board-card-company {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-soft);
 }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 1000px) {
+.board-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1.5px solid var(--surface-soft);
+  gap: 8px;
+}
+
+.board-card-date {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-family: "DM Mono", monospace;
+  color: var(--text-soft);
+}
+
+/* =========================================================
+   DETAIL & EDIT APPLICATION MODAL
+   ========================================================= */
+
+.application-detail-modal {
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.application-detail-info {
+  width: 100%;
+  padding: 18px 28px 10px;
+  box-sizing: border-box;
+}
+
+.detail-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 14px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  box-sizing: border-box;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  font-size: 11px;
+  font-family: "DM Mono", monospace;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  font-weight: 700;
+}
+
+.detail-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.detail-value.company-name {
+  font-weight: 700;
+}
+
+.application-modal-form {
+  padding: 16px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.modal-actions-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 2px solid var(--border);
+  margin-top: 4px;
+}
+
+.modal-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.danger-button {
+  background: var(--peach) !important;
+  color: var(--text) !important;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: #f5bdaf !important;
+}
+
+/* Empty State Typography */
+.empty-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.empty-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-soft);
+  font-weight: 500;
+}
+
+/* =========================================================
+   RESPONSIVE DESIGN BREAKPOINTS
+   TESTED: 1440px, 1280px, 1024px, 900px, 768px, 600px, 500px, 400px
+   ========================================================= */
+
+@media (max-width: 1024px) {
   .application-card {
-    grid-template-columns: 48px minmax(180px, 2fr) minmax(120px, 1fr) auto;
+    grid-template-columns: 46px minmax(180px, 2fr) minmax(110px, 1fr) minmax(120px, 1fr) 75px;
     gap: 14px;
   }
 }
 
-@media (max-width: 750px) {
+@media (max-width: 900px) {
   .applications-page {
-    gap: 18px;
+    gap: 20px;
   }
 
   .applications-toolbar {
@@ -169,33 +575,120 @@
   }
 
   .applications-list {
-    padding: 18px;
-  }
-
-  .application-card {
-    grid-template-columns: 44px minmax(0, 1fr) auto;
-    gap: 12px;
-    padding: 16px;
-  }
-
-  .application-date,
-  .application-number {
-    display: none;
+    padding: 20px;
   }
 }
 
-@media (max-width: 500px) {
-  .applications-list {
-    padding: 14px;
+@media (max-width: 768px) {
+  .application-card {
+    grid-template-columns: 44px minmax(0, 1fr) auto 70px;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .application-date {
+    display: none;
+  }
+
+  .application-number {
+    display: none;
+  }
+
+  .detail-meta-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .status-filter-tabs {
+    display: none;
+  }
+
+  .status-filter-select.mobile-only-select {
+    display: block;
+    width: 100%;
+  }
+
+  .toolbar-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-top .search-box {
+    max-width: 100%;
+  }
+
+  .toolbar-right {
+    width: 100%;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .section-header-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .application-card {
     grid-template-columns: 40px minmax(0, 1fr) auto;
     gap: 10px;
-    padding: 12px;
+    padding: 12px 14px;
   }
 
-  .application-edit-info {
-    padding: 8px 18px 0;
+  .modal-actions-between {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .modal-actions-between button,
+  .modal-actions-right {
+    width: 100%;
+  }
+
+  .modal-actions-right {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-actions-right button {
+    width: 100%;
+  }
+
+  .application-detail-info {
+    padding: 14px 18px 6px;
+  }
+
+  .application-modal-form {
+    padding: 12px 18px 20px;
+  }
+}
+
+@media (max-width: 440px) {
+  .application-card {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .application-main h3 {
+    font-size: 15px;
+  }
+
+  .company-logo {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .view-job-button {
+    padding: 5px 8px;
+    font-size: 11px;
   }
 }

@@ -7,6 +7,9 @@ import {
   Building2,
   X,
   Save,
+  Trash2,
+  List,
+  LayoutGrid,
 } from "lucide-react";
 
 import applicationService from "../services/applicationService";
@@ -23,6 +26,25 @@ const STATUS_LABELS = {
   withdrawn: "Withdrawn",
 };
 
+const PIPELINE_COLUMNS = [
+  { key: "saved", label: "Not Started", color: "neutral" },
+  { key: "applied", label: "Applied", color: "peach" },
+  { key: "screening", label: "Screening", color: "blue" },
+  { key: "interview", label: "Interview", color: "sage" },
+  { key: "offer", label: "Offered", color: "yellow" },
+];
+
+const STATUS_TABS = [
+  { key: "all", label: "All" },
+  { key: "saved", label: "Not Started" },
+  { key: "applied", label: "Applied" },
+  { key: "screening", label: "Screening" },
+  { key: "interview", label: "Interview" },
+  { key: "offer", label: "Offered" },
+  { key: "rejected", label: "Rejected" },
+  { key: "withdrawn", label: "Withdrawn" },
+];
+
 export default function Applications() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,19 +52,19 @@ export default function Applications() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [viewMode, setViewMode] = useState("list");
 
   const [showAddApplication, setShowAddApplication] = useState(false);
 
-  /* EDIT APPLICATION */
+  /* VIEW / EDIT APPLICATION MODAL */
   const [selectedApplication, setSelectedApplication] = useState(null);
-
   const [editForm, setEditForm] = useState({
     status: "applied",
     applied_at: "",
     notes: "",
   });
-
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [editError, setEditError] = useState("");
 
   const loadApplications = async () => {
@@ -51,30 +73,47 @@ export default function Applications() {
       setError("");
 
       const data = await applicationService.getApplications();
-
-      setApplications(data);
-    } catch (error) {
-      console.error("Loading applications failed:", error);
-
-      setError(error.response?.data?.detail || "Unable to load applications.");
+      setApplications(data || []);
+    } catch (err) {
+      console.error("Loading applications failed:", err);
+      setError(err.response?.data?.detail || "Unable to load applications.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadApplications();
+    let ignore = false;
+
+    const fetchInitialApplications = async () => {
+      try {
+        const data = await applicationService.getApplications();
+        if (!ignore) {
+          setApplications(data || []);
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.error("Loading applications failed:", err);
+          setError(err.response?.data?.detail || "Unable to load applications.");
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchInitialApplications();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleApplicationCreated = async () => {
     setShowAddApplication(false);
-
     await loadApplications();
   };
-
-  /* =========================================
-     OPEN EDIT MODAL
-     ========================================= */
 
   const formatDateTimeLocal = (dateValue) => {
     if (!dateValue) return "";
@@ -87,12 +126,22 @@ export default function Applications() {
     }
   };
 
+  const formatDate = (date) => {
+    if (!date) return "Not specified";
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  /* =========================================
+     VIEW APPLICATION DETAILS & EDIT
+     ========================================= */
   const handleViewApplication = (application) => {
     if (!application) return;
     setSelectedApplication(application);
-
     setEditError("");
-
     setEditForm({
       status: application.status || "applied",
       applied_at: formatDateTimeLocal(
@@ -102,26 +151,14 @@ export default function Applications() {
     });
   };
 
-  /* =========================================
-     CLOSE EDIT MODAL
-     ========================================= */
-
   const handleCloseEdit = () => {
-    if (saving) {
-      return;
-    }
-
+    if (saving || deleting) return;
     setSelectedApplication(null);
     setEditError("");
   };
 
-  /* =========================================
-     EDIT FORM CHANGE
-     ========================================= */
-
   const handleEditChange = (event) => {
     const { name, value } = event.target;
-
     setEditForm((previous) => ({
       ...previous,
       [name]: value,
@@ -131,13 +168,9 @@ export default function Applications() {
   /* =========================================
      SAVE APPLICATION
      ========================================= */
-
   const handleSaveApplication = async (event) => {
     event.preventDefault();
-
-    if (!selectedApplication) {
-      return;
-    }
+    if (!selectedApplication) return;
 
     try {
       setSaving(true);
@@ -151,29 +184,78 @@ export default function Applications() {
         notes: editForm.notes.trim() || null,
       };
 
-      await applicationService.updateApplication(
+      const updated = await applicationService.updateApplication(
         selectedApplication.id,
-        updateData,
+        updateData
+      );
+
+      // Directly update in local state to avoid full reload and preserve filter
+      setApplications((previous) =>
+        previous.map((app) => (app.id === updated.id ? updated : app))
       );
 
       setSelectedApplication(null);
-
-      await loadApplications();
-    } catch (error) {
-      console.error("Updating application failed:", error);
-
-      setEditError(
-        error.response?.data?.detail || "Unable to update application.",
-      );
+    } catch (err) {
+      console.error("Updating application failed:", err);
+      setEditError(err.response?.data?.detail || "Unable to update application.");
     } finally {
       setSaving(false);
     }
   };
 
   /* =========================================
-     SEARCH + FILTER
+     DELETE APPLICATION
      ========================================= */
+  const handleDeleteApplication = async (applicationId) => {
+    if (!window.confirm("Are you sure you want to delete this application?")) {
+      return;
+    }
 
+    try {
+      setDeleting(true);
+      setEditError("");
+      await applicationService.deleteApplication(applicationId);
+
+      // Remove from visible UI immediately
+      setApplications((previous) =>
+        previous.filter((app) => app.id !== applicationId)
+      );
+      setSelectedApplication(null);
+    } catch (err) {
+      console.error("Deleting application failed:", err);
+      setEditError(err.response?.data?.detail || "Unable to delete application.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  /* =========================================
+     COUNTS COMPUTATION (ACCURATE REAL DATA)
+     ========================================= */
+  const statusCounts = useMemo(() => {
+    const counts = {
+      all: applications.length,
+      saved: 0,
+      applied: 0,
+      screening: 0,
+      interview: 0,
+      offer: 0,
+      rejected: 0,
+      withdrawn: 0,
+    };
+
+    applications.forEach((app) => {
+      if (counts[app.status] !== undefined) {
+        counts[app.status]++;
+      }
+    });
+
+    return counts;
+  }, [applications]);
+
+  /* =========================================
+     SEARCH + STATUS FILTER (DERIVED DATA)
+     ========================================= */
   const filteredApplications = useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
 
@@ -192,37 +274,46 @@ export default function Applications() {
   }, [applications, searchTerm, statusFilter]);
 
   /* =========================================
-     DATE FORMAT
+     VISIBLE BOARD COLUMNS
+     NEVER RENDER EMPTY COLUMNS FOR SELECTED STATUS
      ========================================= */
-
-  const formatDate = (date) => {
-    if (!date) {
-      return "Not specified";
+  const visibleBoardColumns = useMemo(() => {
+    if (statusFilter === "all") {
+      // In "All", display columns that either belong to the primary pipeline
+      // or match any present status
+      return PIPELINE_COLUMNS;
     }
 
-    return new Date(date).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+    // When a specific status is chosen, show ONLY that single status column!
+    const foundCol = PIPELINE_COLUMNS.find((col) => col.key === statusFilter);
+    if (foundCol) {
+      return [foundCol];
+    }
+
+    // For other statuses like rejected or withdrawn
+    return [
+      {
+        key: statusFilter,
+        label: STATUS_LABELS[statusFilter] || statusFilter,
+        color: "neutral",
+      },
+    ];
+  }, [statusFilter]);
 
   return (
     <div className="page-container applications-page">
       {/* =====================================
-          HEADER
+          HEADER (MATCHING JOBS COMPACT STYLE)
           ===================================== */}
-
       <section className="page-header brutalist-card">
         <div>
           <span className="eyebrow">Career Tracker</span>
-
           <h1 className="page-title">Applications</h1>
-
           <p>Track every application and follow its progress.</p>
         </div>
 
         <button
+          type="button"
           className="brutalist-button primary"
           onClick={() => setShowAddApplication(true)}
         >
@@ -232,72 +323,143 @@ export default function Applications() {
       </section>
 
       {/* =====================================
-          TOOLBAR
+          TOOLBAR (SEARCH + STATUS FILTER)
           ===================================== */}
-
       <section className="applications-toolbar brutalist-card">
-        <div className="search-box">
-          <Search size={17} />
+        <div className="toolbar-top">
+          <div className="search-box">
+            <Search size={17} />
+            <input
+              type="text"
+              placeholder="Search applications by title, company, notes..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                className="clear-search-btn"
+                onClick={() => setSearchTerm("")}
+                title="Clear search"
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
 
-          <input
-            type="text"
-            placeholder="Search applications..."
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-          />
+          <div className="toolbar-right">
+            {/* Fallback compact select for very small mobile viewports */}
+            <select
+              className="status-filter-select mobile-only-select"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+              aria-label="Filter applications by status"
+            >
+              <option value="all">All ({statusCounts.all})</option>
+              <option value="saved">Not Started ({statusCounts.saved})</option>
+              <option value="applied">Applied ({statusCounts.applied})</option>
+              <option value="screening">Screening ({statusCounts.screening})</option>
+              <option value="interview">Interview ({statusCounts.interview})</option>
+              <option value="offer">Offered ({statusCounts.offer})</option>
+              <option value="rejected">Rejected ({statusCounts.rejected})</option>
+              <option value="withdrawn">Withdrawn ({statusCounts.withdrawn})</option>
+            </select>
+          </div>
         </div>
 
-        <select
-          className="status-filter"
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-        >
-          <option value="all">All Statuses</option>
+        {/* Status Filter Tabs with Real Counts */}
+        <div className="status-filter-tabs">
+          {STATUS_TABS.map((tab) => {
+            const count = statusCounts[tab.key] ?? 0;
+            // Hide rejected/withdrawn tabs if they have 0 count and aren't active
+            if (
+              (tab.key === "rejected" || tab.key === "withdrawn") &&
+              count === 0 &&
+              statusFilter !== tab.key
+            ) {
+              return null;
+            }
 
-          <option value="saved">Not Started</option>
-
-          <option value="applied">Applied</option>
-
-          <option value="screening">Screening</option>
-
-          <option value="interview">Interview</option>
-
-          <option value="offer">Offered</option>
-
-          <option value="rejected">Rejected</option>
-
-          <option value="withdrawn">Withdrawn</option>
-        </select>
+            const isActive = statusFilter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                className={`status-tab ${isActive ? "active" : ""}`}
+                onClick={() => setStatusFilter(tab.key)}
+              >
+                <span>{tab.label}</span>
+                <span className="tab-count">{count}</span>
+              </button>
+            );
+          })}
+        </div>
       </section>
 
       {/* =====================================
-          APPLICATION LIST
+          APPLICATIONS CONTENT (LIST / BOARD)
           ===================================== */}
-
       <section className="applications-list brutalist-card">
         <div className="section-header">
           <div className="section-heading">
             <BriefcaseBusiness size={21} />
-
-            <h2>Your Applications</h2>
+            <h2>
+              {statusFilter === "all"
+                ? "All Applications"
+                : `${STATUS_LABELS[statusFilter] || statusFilter} Applications`}
+            </h2>
           </div>
 
-          <span className="application-count">
-            {filteredApplications.length} applications
-          </span>
+          <div className="section-header-actions">
+            {/* View Mode Toggle: List vs Board */}
+            <div className="view-toggle">
+              <button
+                type="button"
+                className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
+                onClick={() => setViewMode("list")}
+                title="List View"
+                aria-label="Switch to list view"
+              >
+                <List size={16} />
+                <span className="toggle-label">List</span>
+              </button>
+              <button
+                type="button"
+                className={`view-toggle-btn ${viewMode === "board" ? "active" : ""}`}
+                onClick={() => setViewMode("board")}
+                title="Board View"
+                aria-label="Switch to board view"
+              >
+                <LayoutGrid size={16} />
+                <span className="toggle-label">Board</span>
+              </button>
+            </div>
+
+            <span className="application-count">
+              {filteredApplications.length} application
+              {filteredApplications.length === 1 ? "" : "s"}
+            </span>
+          </div>
         </div>
 
+        {/* FEEDBACK STATES */}
         {loading ? (
           <div className="empty-state">Loading applications...</div>
         ) : error ? (
           <div className="form-error">{error}</div>
         ) : filteredApplications.length === 0 ? (
           <div className="empty-state">
-            {searchTerm || statusFilter !== "all"
-              ? "No applications match your filters."
-              : "No applications yet."}
+            <p className="empty-title">No applications found</p>
+            <p className="empty-subtitle">
+              {searchTerm || statusFilter !== "all"
+                ? "Try another status or search."
+                : "Get started by adding your first job application."}
+            </p>
           </div>
-        ) : (
+        ) : viewMode === "list" ? (
+          /* =====================================
+             LIST VIEW (MATCHING JOBS ROW CARDS)
+             ===================================== */
           <div className="applications-grid">
             {filteredApplications.map((application) => (
               <article
@@ -305,64 +467,150 @@ export default function Applications() {
                 key={application.id}
                 onClick={() => handleViewApplication(application)}
               >
+                {/* COMPANY LOGO */}
+                <div className="company-logo">
+                  {application.company_name
+                    ? application.company_name.charAt(0).toUpperCase()
+                    : "C"}
+                </div>
 
-  {/* COMPANY LOGO */}
-  <div className="company-logo">
-    {application.company_name
-      ? application.company_name.charAt(0)
-      : "C"}
-  </div>
+                {/* JOB INFO */}
+                <div className="application-main">
+                  <h3>
+                    {application.job_title || `Job #${application.job_id}`}
+                  </h3>
+                  <p className="application-company">
+                    <Building2 size={15} />
+                    {application.company_name || "Company"}
+                  </p>
+                </div>
 
-  {/* JOB INFORMATION */}
-  <div className="application-main">
-    <h3>
-      {application.job_title || `Job #${application.job_id}`}
-    </h3>
+                {/* STATUS & DATE */}
+                <div className="application-meta">
+                  <span
+                    className={`application-status status-${application.status}`}
+                  >
+                    {STATUS_LABELS[application.status] || application.status}
+                  </span>
+                  <p className="application-date">
+                    <CalendarDays size={14} />
+                    {formatDate(application.applied_at || application.created_at)}
+                  </p>
+                </div>
 
-    <p className="application-company">
-      <Building2 size={15} />
-      {application.company_name || "Company"}
-    </p>
-  </div>
-
-  {/* STATUS + DATE */}
-  <div className="application-meta">
-
-    <span
-      className={`application-status status-${application.status}`}
-    >
-      {STATUS_LABELS[application.status] || application.status}
-    </span>
-
-    <p className="application-date">
-      <CalendarDays size={15} />
-      {formatDate(application.applied_at)}
-    </p>
-
-  </div>
-
-  {/* ACTION */}
-  <div className="application-card-footer">
-
-    <span className="application-number">
-      Application #{application.id}
-    </span>
-
-    <button
-      type="button"
-      className="view-job-button"
-      onClick={(e) => {
-        e.stopPropagation();
-        handleViewApplication(application);
-      }}
-    >
-      View
-    </button>
-
-  </div>
-
-</article>
+                {/* FOOTER & VIEW ACTION */}
+                <div className="application-card-footer">
+                  <span className="application-number">
+                    #{application.id}
+                  </span>
+                  <button
+                    type="button"
+                    className="view-job-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewApplication(application);
+                    }}
+                  >
+                    View
+                  </button>
+                </div>
+              </article>
             ))}
+          </div>
+        ) : (
+          /* =====================================
+             BOARD VIEW (COLUMNS)
+             NEVER SHOWS EMPTY COLUMNS FOR A SELECTED STATUS
+             ===================================== */
+          <div
+            className={`applications-board ${
+              visibleBoardColumns.length === 1 ? "single-column" : ""
+            }`}
+          >
+            {visibleBoardColumns.map((column) => {
+              const colApplications = filteredApplications.filter(
+                (app) => app.status === column.key
+              );
+
+              return (
+                <div
+                  className={`board-column ${column.color}`}
+                  key={column.key}
+                >
+                  <div className="board-column-header">
+                    <div className="board-column-title-group">
+                      <span className="board-column-dot" />
+                      <h3>{column.label}</h3>
+                      <span className="board-column-count">
+                        {colApplications.length}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="board-column-cards">
+                    {colApplications.length === 0 ? (
+                      <div className="board-column-empty">
+                        No {column.label.toLowerCase()} applications
+                      </div>
+                    ) : (
+                      colApplications.map((application) => (
+                        <div
+                          className="board-card"
+                          key={application.id}
+                          onClick={() => handleViewApplication(application)}
+                        >
+                          <div className="board-card-header">
+                            <div className="company-logo small">
+                              {application.company_name
+                                ? application.company_name
+                                    .charAt(0)
+                                    .toUpperCase()
+                                : "C"}
+                            </div>
+                            <span
+                              className={`application-status status-${application.status}`}
+                            >
+                              {STATUS_LABELS[application.status] ||
+                                application.status}
+                            </span>
+                          </div>
+
+                          <h4 className="board-card-title">
+                            {application.job_title ||
+                              `Job #${application.job_id}`}
+                          </h4>
+
+                          <p className="board-card-company">
+                            <Building2 size={13} />
+                            {application.company_name || "Company"}
+                          </p>
+
+                          <div className="board-card-footer">
+                            <span className="board-card-date">
+                              <CalendarDays size={13} />
+                              {formatDate(
+                                application.applied_at ||
+                                  application.created_at
+                              )}
+                            </span>
+                            <button
+                              type="button"
+                              className="view-job-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewApplication(application);
+                              }}
+                            >
+                              View
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
@@ -370,7 +618,6 @@ export default function Applications() {
       {/* =====================================
           ADD APPLICATION MODAL
           ===================================== */}
-
       {showAddApplication && (
         <AddApplication
           onClose={() => setShowAddApplication(false)}
@@ -379,19 +626,22 @@ export default function Applications() {
       )}
 
       {/* =====================================
-          EDIT APPLICATION MODAL
+          VIEW DETAILS & EDIT MODAL
           ===================================== */}
-
       {selectedApplication && (
-        <div className="modal-overlay">
-          <div className="add-application-modal brutalist-card">
-            {/* HEADER */}
-
+        <div className="modal-overlay" onClick={handleCloseEdit}>
+          <div
+            className="add-application-modal brutalist-card application-detail-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* MODAL HEADER */}
             <div className="modal-header">
               <div>
                 <span className="eyebrow">Application Details</span>
-
-                <h2>Edit Application</h2>
+                <h2>
+                  {selectedApplication.job_title ||
+                    `Job #${selectedApplication.job_id}`}
+                </h2>
               </div>
 
               <button
@@ -399,113 +649,134 @@ export default function Applications() {
                 className="modal-close"
                 onClick={handleCloseEdit}
                 aria-label="Close"
+                disabled={saving || deleting}
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* APPLICATION INFO */}
+            {/* APPLICATION INFO CARD */}
+            <div className="application-detail-info">
+              <div className="detail-meta-grid">
+                <div className="detail-item">
+                  <span className="detail-label">Company</span>
+                  <div className="detail-value company-name">
+                    <Building2 size={15} />
+                    <strong>{selectedApplication.company_name || "Company"}</strong>
+                  </div>
+                </div>
 
-            <div className="application-edit-info">
-              <h3>
-                {selectedApplication.job_title ||
-                  `Job #${selectedApplication.job_id}`}
-              </h3>
+                <div className="detail-item">
+                  <span className="detail-label">Application ID</span>
+                  <span className="detail-value mono">
+                    #{selectedApplication.id}
+                  </span>
+                </div>
 
-              <p>
-                <Building2 size={15} />
+                <div className="detail-item">
+                  <span className="detail-label">Current Status</span>
+                  <div>
+                    <span
+                      className={`application-status status-${selectedApplication.status}`}
+                    >
+                      {STATUS_LABELS[selectedApplication.status] ||
+                        selectedApplication.status}
+                    </span>
+                  </div>
+                </div>
 
-                {selectedApplication.company_name || "Company"}
-              </p>
+                <div className="detail-item">
+                  <span className="detail-label">Date Tracked</span>
+                  <span className="detail-value">
+                    <CalendarDays size={14} />
+                    {formatDate(
+                      selectedApplication.applied_at ||
+                        selectedApplication.created_at
+                    )}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* EDIT FORM */}
-
-            <form onSubmit={handleSaveApplication}>
-              {/* STATUS */}
-
+            <form onSubmit={handleSaveApplication} className="application-modal-form">
               <div className="form-group">
-                <label htmlFor="edit-status">Application Status</label>
-
+                <label htmlFor="edit-status">Status</label>
                 <select
                   id="edit-status"
                   name="status"
                   value={editForm.status}
                   onChange={handleEditChange}
-                  disabled={saving}
+                  disabled={saving || deleting}
                 >
                   <option value="saved">Not Started</option>
-
                   <option value="applied">Applied</option>
-
                   <option value="screening">Screening</option>
-
                   <option value="interview">Interview</option>
-
                   <option value="offer">Offered</option>
-
                   <option value="rejected">Rejected</option>
-
                   <option value="withdrawn">Withdrawn</option>
                 </select>
               </div>
 
-              {/* DATE */}
-
               <div className="form-group">
-                <label htmlFor="edit-applied-at">Applied Date</label>
-
+                <label htmlFor="edit-applied-at">Applied / Updated Date</label>
                 <input
                   id="edit-applied-at"
                   name="applied_at"
                   type="datetime-local"
                   value={editForm.applied_at}
                   onChange={handleEditChange}
-                  disabled={saving}
+                  disabled={saving || deleting}
                 />
               </div>
 
-              {/* NOTES */}
-
               <div className="form-group">
                 <label htmlFor="edit-notes">Notes</label>
-
                 <textarea
                   id="edit-notes"
                   name="notes"
                   rows="4"
-                  placeholder="Add notes about this application..."
+                  placeholder="Add notes about this application (interviews, follow-ups, contacts)..."
                   value={editForm.notes}
                   onChange={handleEditChange}
-                  disabled={saving}
+                  disabled={saving || deleting}
                 />
               </div>
 
-              {/* ERROR */}
-
               {editError && <div className="form-error">{editError}</div>}
 
-              {/* ACTIONS */}
-
-              <div className="modal-actions">
+              {/* MODAL ACTIONS: DELETE + CANCEL + SAVE */}
+              <div className="modal-actions-between">
                 <button
                   type="button"
-                  className="brutalist-button"
-                  onClick={handleCloseEdit}
-                  disabled={saving}
+                  className="brutalist-button danger-button"
+                  onClick={() => handleDeleteApplication(selectedApplication.id)}
+                  disabled={saving || deleting}
                 >
-                  Cancel
+                  <Trash2 size={16} />
+                  {deleting ? "Deleting..." : "Delete Application"}
                 </button>
 
-                <button
-                  type="submit"
-                  className="brutalist-button primary"
-                  disabled={saving}
-                >
-                  <Save size={17} />
+                <div className="modal-actions-right">
+                  <button
+                    type="button"
+                    className="brutalist-button"
+                    onClick={handleCloseEdit}
+                    disabled={saving || deleting}
+                  >
+                    Cancel
+                  </button>
 
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
+                  <button
+                    type="submit"
+                    className="brutalist-button primary"
+                    disabled={saving || deleting}
+                  >
+                    <Save size={16} />
+                    {saving ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

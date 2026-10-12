@@ -1,7 +1,6 @@
 import axios from "axios";
 import authService from "./authService";
-
-const API_BASE_URL = "http://127.0.0.1:8000";
+import { API_BASE_URL } from "./api";
 
 const applicationService = {
   async getApplications() {
@@ -12,6 +11,21 @@ const applicationService = {
         Authorization: `Bearer ${token}`,
       },
     });
+
+    return response.data;
+  },
+
+  async getApplication(applicationId) {
+    const token = authService.getToken();
+
+    const response = await axios.get(
+      `${API_BASE_URL}/api/applications/${applicationId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
 
     return response.data;
   },

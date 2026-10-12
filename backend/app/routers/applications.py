@@ -64,10 +64,10 @@ def create_application(
 
     company = db.get(Company, job.company_id)
 
-    if company is None:
+    if company is None or company.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company not found",
+            detail="Job not found",
         )
 
     if application_data.status not in VALID_STATUSES:
@@ -116,7 +116,10 @@ def get_applications(
             Company,
             Job.company_id == Company.id,
         )
-        .where(Application.user_id == current_user.id)
+        .where(
+            Application.user_id == current_user.id,
+            Company.user_id == current_user.id,
+        )
         .order_by(Application.id.desc())
     )
 
@@ -156,6 +159,7 @@ def get_application(
         .where(
             Application.id == application_id,
             Application.user_id == current_user.id,
+            Company.user_id == current_user.id,
         )
     ).first()
 
@@ -225,10 +229,10 @@ def update_application(
 
     company = db.get(Company, job.company_id)
 
-    if company is None:
+    if company is None or company.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company not found",
+            detail="Job not found",
         )
 
     return build_application_response(

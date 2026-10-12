@@ -39,7 +39,9 @@ class InterviewResponse(BaseModel):
     notes: str | None
     status: str
 
+    job_id: int | None = None
     job_title: str | None = None
+    job_description: str | None = None
     company_name: str | None = None
 
     created_at: datetime

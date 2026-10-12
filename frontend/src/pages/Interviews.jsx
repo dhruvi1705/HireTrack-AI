@@ -4,14 +4,16 @@ import {
   CalendarDays,
   Clock,
   Video,
-  MapPin,
   Plus,
   X,
   Building2,
+  Sparkles,
+  FileText,
 } from "lucide-react";
 
 import interviewService from "../services/interviewService";
 import applicationService from "../services/applicationService";
+import InterviewPreparationModal from "../components/InterviewPreparationModal";
 import "./Interviews.css";
 
 function Interviews() {
@@ -20,6 +22,7 @@ function Interviews() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedInterviewForPrep, setSelectedInterviewForPrep] = useState(null);
 
   const [formData, setFormData] = useState({
     application_id: "",
@@ -32,19 +35,70 @@ function Interviews() {
 
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    loadInterviews();
-    loadApplications();
-  }, []);
-
   const loadApplications = async () => {
     try {
       const data = await applicationService.getApplications();
-      setApplications(data);
+      setApplications(data || []);
     } catch (err) {
       console.error("Failed to load applications:", err);
     }
   };
+
+  const loadInterviews = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await interviewService.getInterviews();
+      setInterviews(data || []);
+    } catch (err) {
+      console.error("Failed to load interviews:", err);
+
+      if (err.response?.status === 401) {
+        setError("Your session has expired. Please log in again.");
+      } else {
+        setError("Failed to load interviews.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let ignore = false;
+
+    const fetchInitial = async () => {
+      try {
+        const [intData, appData] = await Promise.all([
+          interviewService.getInterviews(),
+          applicationService.getApplications(),
+        ]);
+        if (!ignore) {
+          setInterviews(intData || []);
+          setApplications(appData || []);
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.error("Failed to load initial interview data:", err);
+          if (err.response?.status === 401) {
+            setError("Your session has expired. Please log in again.");
+          } else {
+            setError("Failed to load interviews.");
+          }
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchInitial();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const handleFormChange = (event) => {
     const { name, value } = event.target;
@@ -83,7 +137,7 @@ function Interviews() {
         status: "scheduled",
       });
 
-      await loadInterviews();
+      await Promise.all([loadInterviews(), loadApplications()]);
     } catch (err) {
       console.error("Failed to create interview:", err);
 
@@ -94,26 +148,6 @@ function Interviews() {
       }
     } finally {
       setSaving(false);
-    }
-  };
-
-  const loadInterviews = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const data = await interviewService.getInterviews();
-      setInterviews(data);
-    } catch (err) {
-      console.error("Failed to load interviews:", err);
-
-      if (err.response?.status === 401) {
-        setError("Your session has expired. Please log in again.");
-      } else {
-        setError("Failed to load interviews.");
-      }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -203,7 +237,12 @@ function Interviews() {
         ) : (
           <div className="interviews-grid">
             {interviews.map((interview) => (
-              <div className="interview-card" key={interview.id}>
+              <div
+                className="interview-card"
+                key={interview.id}
+                onClick={() => setSelectedInterviewForPrep(interview)}
+                style={{ cursor: "pointer" }}
+              >
                 <div className="interview-card-left">
                   <div className="company-logo">
                     {interview.company_name
@@ -254,23 +293,45 @@ function Interviews() {
                 </div>
 
                 <div className="interview-card-footer">
-                  {interview.meeting_link ? (
+                  {interview.meeting_link && (
                     <a
                       href={interview.meeting_link}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="view-job-button join-btn"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Join scheduled video room"
                     >
                       <Video size={14} />
                       Join Meeting
                     </a>
+                  )}
+
+                  {interview.status === "scheduled" || interview.status === "rescheduled" ? (
+                    <button
+                      type="button"
+                      className="view-job-button prep-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedInterviewForPrep(interview);
+                      }}
+                      title="Prepare for this interview"
+                    >
+                      <Sparkles size={13} />
+                      Prepare
+                    </button>
                   ) : (
                     <button
-                      className="view-job-button disabled"
-                      disabled
+                      type="button"
+                      className="view-job-button summary-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedInterviewForPrep(interview);
+                      }}
+                      title="View interview summary and review"
                     >
-                      <MapPin size={14} />
-                      No Link
+                      <FileText size={13} />
+                      Summary
                     </button>
                   )}
                 </div>
@@ -411,6 +472,14 @@ function Interviews() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* INTERVIEW PREPARATION & DETAILS MODAL */}
+      {selectedInterviewForPrep && (
+        <InterviewPreparationModal
+          interview={selectedInterviewForPrep}
+          onClose={() => setSelectedInterviewForPrep(null)}
+        />
       )}
     </div>
   );

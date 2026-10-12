@@ -11,11 +11,13 @@ import {
   Search,
   Sparkles,
   Trophy,
+  Video,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import dashboardService from "../services/dashboardService";
 import applicationService from "../services/applicationService";
+import interviewService from "../services/interviewService";
 import AddApplication from "../components/AddApplication";
 import "./Dashboard.css";
 
@@ -62,6 +64,7 @@ export default function Dashboard() {
 
   const [dashboardData, setDashboardData] = useState(null);
   const [applications, setApplications] = useState([]);
+  const [interviews, setInterviews] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -75,13 +78,18 @@ export default function Dashboard() {
       setLoading(true);
       setError("");
 
-      const [summary, applicationData] = await Promise.all([
+      const [summary, applicationData, interviewData] = await Promise.all([
         dashboardService.getSummary(),
         applicationService.getApplications(),
+        interviewService.getInterviews().catch((err) => {
+          console.error("Dashboard interviews loading failed:", err);
+          return [];
+        }),
       ]);
 
       setDashboardData(summary);
       setApplications(applicationData || []);
+      setInterviews(interviewData || []);
     } catch (error) {
       console.error("Dashboard loading failed:", error);
 
@@ -95,7 +103,43 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    loadDashboard();
+    let ignore = false;
+
+    const fetchInitialDashboard = async () => {
+      try {
+        const [summary, applicationData, interviewData] = await Promise.all([
+          dashboardService.getSummary(),
+          applicationService.getApplications(),
+          interviewService.getInterviews().catch((err) => {
+            console.error("Dashboard interviews loading failed:", err);
+            return [];
+          }),
+        ]);
+
+        if (!ignore) {
+          setDashboardData(summary);
+          setApplications(applicationData || []);
+          setInterviews(interviewData || []);
+        }
+      } catch (error) {
+        if (!ignore) {
+          console.error("Dashboard loading failed:", error);
+          setError(
+            error.response?.data?.detail || "Unable to load dashboard data."
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchInitialDashboard();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleApplicationCreated = async () => {
@@ -105,6 +149,10 @@ export default function Dashboard() {
 
   const handleViewApplications = () => {
     navigate("/applications");
+  };
+
+  const handleViewInterviews = () => {
+    navigate("/interviews");
   };
 
   const handleOpenApplication = () => {
@@ -141,6 +189,29 @@ export default function Dashboard() {
     );
   };
 
+  const upcomingInterviews = useMemo(() => {
+    const now = new Date();
+
+    return interviews
+      .filter((interview) => {
+        if (!interview.interview_date) return false;
+
+        // Exclude cancelled and completed interviews
+        const status = (interview.status || "").toLowerCase();
+        if (status === "cancelled" || status === "completed") {
+          return false;
+        }
+
+        const interviewDate = new Date(interview.interview_date);
+        if (isNaN(interviewDate.getTime())) return false;
+
+        // Upcoming interview must be scheduled for the future
+        return interviewDate > now;
+      })
+      .sort((a, b) => new Date(a.interview_date) - new Date(b.interview_date))
+      .slice(0, 5);
+  }, [interviews]);
+
   const formatDate = (date) => {
     if (!date) return "Not specified";
 
@@ -148,6 +219,17 @@ export default function Dashboard() {
       day: "2-digit",
       month: "short",
       year: "numeric",
+    });
+  };
+
+  const formatTime = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+
+    return d.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -622,8 +704,10 @@ export default function Dashboard() {
             </div>
 
             <button
+              type="button"
               className="view-link"
-              onClick={handleViewApplications}
+              onClick={handleViewInterviews}
+              title="View all interviews"
             >
               View all
               <ChevronRight size={16} />
@@ -632,43 +716,62 @@ export default function Dashboard() {
 
           <div className="interview-list">
 
-            {dashboardData.upcoming_interviews.length === 0 ? (
+            {upcomingInterviews.length === 0 ? (
               <div className="empty-state">
                 No upcoming interviews.
               </div>
             ) : (
-              dashboardData.upcoming_interviews.map(
-                (interview) => (
-                  <div
-                    className="interview-item"
-                    key={interview.id}
-                  >
-                    <div className="company-logo">
-                      {interview.company
-                        ? interview.company
-                            .charAt(0)
-                            .toUpperCase()
-                        : "C"}
-                    </div>
+              upcomingInterviews.map((interview) => (
+                <div
+                  className="interview-item"
+                  key={interview.id}
+                  onClick={handleViewInterviews}
+                  style={{ cursor: "pointer" }}
+                >
+                  <div className="company-logo">
+                    {interview.company_name
+                      ? interview.company_name
+                          .charAt(0)
+                          .toUpperCase()
+                      : "C"}
+                  </div>
 
-                    <div className="interview-info">
-                      <strong>
-                        {interview.company}
-                      </strong>
+                  <div className="interview-info">
+                    <strong>
+                      {interview.company_name || "Company"}
+                    </strong>
 
-                      <span>{interview.type}</span>
-                    </div>
+                    <span>
+                      {interview.job_title ? `${interview.job_title} • ` : ""}
+                      {interview.interview_type || "Technical"}
+                    </span>
+                  </div>
 
+                  <div className="interview-timing">
                     <span className="interview-date">
-                      {interview.date}
+                      {formatDate(interview.interview_date)}
                     </span>
 
                     <span className="interview-time">
-                      {interview.time}
+                      {formatTime(interview.interview_date)}
                     </span>
                   </div>
-                )
-              )
+
+                  {interview.meeting_link && (
+                    <a
+                      href={interview.meeting_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="view-job-button join-btn small-btn"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Join Meeting"
+                    >
+                      <Video size={13} />
+                      <span>Join</span>
+                    </a>
+                  )}
+                </div>
+              ))
             )}
 
           </div>

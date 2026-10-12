@@ -1,17 +1,25 @@
-import { useState } from "react";
-import { BriefcaseBusiness, Lock, Mail, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BriefcaseBusiness, Lock, Mail, ArrowRight, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 import "./Login.css";
 
-export default function Login() {
+export default function Login({ isSignUpMode = false }) {
   const navigate = useNavigate();
 
+  const [isSignUp, setIsSignUp] = useState(isSignUpMode);
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (authService.isAuthenticated()) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -20,15 +28,28 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await authService.login(email, password);
+      if (isSignUp) {
+        await authService.register(fullName, email, password);
+        await authService.login(email, password);
+      } else {
+        await authService.login(email, password);
+      }
 
-      navigate("/");
-    } catch (error) {
-      const message =
-        error.response?.data?.detail ||
-        "Login failed. Please check your email and password.";
+      navigate("/dashboard");
+    } catch (err) {
+      let message = err.response?.data?.detail;
 
-      setError(message);
+      if (Array.isArray(message)) {
+        message = message.map((item) => item.msg).join(", ");
+      }
+
+      if (!message) {
+        message = isSignUp
+          ? "Registration failed. Please check your details."
+          : "Login failed. Please check your email and password.";
+      }
+
+      setError(typeof message === "string" ? message : JSON.stringify(message));
     } finally {
       setLoading(false);
     }
@@ -52,21 +73,53 @@ export default function Login() {
 
         <div className="login-heading">
           <div className="eyebrow">
-            Welcome back
+            {isSignUp ? "Get started" : "Welcome back"}
           </div>
 
           <h1>
-            Let's get back
-            <br />
-            to your <span>career.</span>
+            {isSignUp ? (
+              <>
+                Start tracking
+                <br />
+                your <span>career.</span>
+              </>
+            ) : (
+              <>
+                Let's get back
+                <br />
+                to your <span>career.</span>
+              </>
+            )}
           </h1>
 
           <p>
-            Sign in to continue tracking your job search.
+            {isSignUp
+              ? "Create an account to continue tracking your job search."
+              : "Sign in to continue tracking your job search."}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
+
+          {isSignUp && (
+            <label>
+              Full Name
+
+              <div className="login-input">
+                <User size={18} />
+
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(event) =>
+                    setFullName(event.target.value)
+                  }
+                  placeholder="Dhruvi Khatri"
+                  required
+                />
+              </div>
+            </label>
+          )}
 
           <label>
             Email
@@ -99,7 +152,7 @@ export default function Login() {
                 onChange={(event) =>
                   setPassword(event.target.value)
                 }
-                placeholder="Enter your password"
+                placeholder={isSignUp ? "Create a secure password (min 8 chars)" : "Enter your password"}
                 required
               />
             </div>
@@ -118,10 +171,48 @@ export default function Login() {
             className="login-submit"
             disabled={loading}
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading
+              ? isSignUp
+                ? "Creating account..."
+                : "Signing in..."
+              : isSignUp
+              ? "Create account"
+              : "Sign in"}
 
             {!loading && <ArrowRight size={18} />}
           </button>
+
+          <div className="login-toggle-prompt">
+            {isSignUp ? (
+              <>
+                Already have an account?
+                <button
+                  type="button"
+                  className="login-toggle-btn"
+                  onClick={() => {
+                    setIsSignUp(false);
+                    setError("");
+                  }}
+                >
+                  Sign in
+                </button>
+              </>
+            ) : (
+              <>
+                Don't have an account?
+                <button
+                  type="button"
+                  className="login-toggle-btn"
+                  onClick={() => {
+                    setIsSignUp(true);
+                    setError("");
+                  }}
+                >
+                  Sign up
+                </button>
+              </>
+            )}
+          </div>
 
         </form>
 

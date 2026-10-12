@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 
@@ -5,6 +6,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.application import Application
 from app.models.company import Company
+from app.models.interview import Interview
 from app.models.job import Job
 from app.models.user import User
 
@@ -20,7 +22,7 @@ def get_dashboard_summary(
     current_user: User = Depends(get_current_user),
 ):
     # -----------------------------------------
-    # Application counts
+    # Application & Resource counts
     # -----------------------------------------
 
     total_applications = (
@@ -28,6 +30,23 @@ def get_dashboard_summary(
             select(func.count(Application.id)).where(
                 Application.user_id == current_user.id
             )
+        )
+        or 0
+    )
+
+    total_jobs = (
+        db.scalar(
+            select(func.count(Job.id))
+            .join(Company, Job.company_id == Company.id)
+            .where(Company.user_id == current_user.id)
+        )
+        or 0
+    )
+
+    total_companies = (
+        db.scalar(
+            select(func.count(Company.id))
+            .where(Company.user_id == current_user.id)
         )
         or 0
     )
@@ -87,7 +106,10 @@ def get_dashboard_summary(
         select(Application, Job, Company)
         .join(Job, Application.job_id == Job.id)
         .join(Company, Job.company_id == Company.id)
-        .where(Application.user_id == current_user.id)
+        .where(
+            Application.user_id == current_user.id,
+            Company.user_id == current_user.id,
+        )
         .order_by(Application.created_at.desc())
         .limit(10)
     ).all()
@@ -108,6 +130,41 @@ def get_dashboard_summary(
             }
         )
 
+    # -----------------------------------------
+    # Upcoming interviews (Real database data)
+    # -----------------------------------------
+
+    now = datetime.now(timezone.utc)
+    interview_rows = db.execute(
+        select(Interview, Application, Job, Company)
+        .join(Application, Interview.application_id == Application.id)
+        .join(Job, Application.job_id == Job.id)
+        .join(Company, Job.company_id == Company.id)
+        .where(
+            Application.user_id == current_user.id,
+            Company.user_id == current_user.id,
+            Interview.interview_date >= now,
+            Interview.status.not_in(["completed", "cancelled"]),
+        )
+        .order_by(Interview.interview_date.asc())
+        .limit(5)
+    ).all()
+
+    upcoming_interviews = []
+    for interview, application, job, company in interview_rows:
+        upcoming_interviews.append(
+            {
+                "id": interview.id,
+                "application_id": application.id,
+                "company": company.name,
+                "role": job.title,
+                "interview_date": interview.interview_date,
+                "interview_type": interview.interview_type,
+                "meeting_link": interview.meeting_link,
+                "status": interview.status,
+            }
+        )
+
     return {
         "user": {
             "id": current_user.id,
@@ -116,10 +173,13 @@ def get_dashboard_summary(
         },
         "stats": {
             "applications": total_applications,
+            "jobs": total_jobs,
+            "companies": total_companies,
             "interviews": interview_count,
             "offers": offer_count,
         },
         "pipeline": pipeline,
         "recent_applications": recent_applications,
-        "upcoming_interviews": [],
+        "upcoming_interviews": upcoming_interviews,
     }
+

@@ -8,9 +8,12 @@ class Settings(BaseSettings):
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-3.5-flash"
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 
 settings = Settings()

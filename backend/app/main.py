@@ -6,8 +6,10 @@ from app.routers.jobs import router as jobs_router
 from app.routers.applications import router as applications_router
 from app.routers.auth import router as auth_router
 from app.routers.dashboard import router as dashboard_router
-from fastapi.middleware.cors import CORSMiddleware
+from app.routers.analytics import router as analytics_router
+from app.routers.ai import router as ai_router
 from app.routers import interviews
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="HireTrack AI API",
@@ -60,3 +62,6 @@ app.include_router(applications_router)
 app.include_router(auth_router)
 app.include_router(dashboard_router)
 app.include_router(interviews.router)
+app.include_router(analytics_router)
+app.include_router(ai_router)
+

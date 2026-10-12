@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import {
   BriefcaseBusiness,
   LayoutDashboard,
@@ -6,14 +7,17 @@ import {
   CalendarDays,
   Sparkles,
   ChevronDown,
+  LogOut,
+  BarChart3,
 } from "lucide-react";
-import { NavLink} from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import authService from "../services/authService";
 import "./Sidebar.css";
 
 const navItems = [
   {
     label: "Home",
-    path: "/",
+    path: "/dashboard",
     icon: LayoutDashboard,
   },
   {
@@ -36,15 +40,61 @@ const navItems = [
     path: "/interviews",
     icon: CalendarDays,
   },
+  {
+    label: "Analytics",
+    path: "/analytics",
+    icon: BarChart3,
+  },
 ];
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    let ignore = false;
+
+    authService
+      .getCurrentUser()
+      .then((data) => {
+        if (!ignore && data) {
+          setUser(data);
+        }
+      })
+      .catch(() => {
+        // Fallback silently if offline or token not ready
+      });
+
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      ignore = true;
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    setDropdownOpen(false);
+    authService.logout();
+    navigate("/login");
+  };
+
+  const displayName = user?.full_name || "Dhruvi";
+  const avatarLetter = (displayName[0] || "D").toUpperCase();
+
   return (
     <header className="top-nav">
       <div className="top-nav-inner">
 
         {/* Logo */}
-        <NavLink to="/" className="brand">
+        <NavLink to="/dashboard" className="brand">
           <div className="brand-icon">
             <BriefcaseBusiness size={22} strokeWidth={2.2} />
           </div>
@@ -57,18 +107,18 @@ export default function Sidebar() {
         {/* Navigation */}
         <nav className="main-nav">
           {navItems.map(({ label, path, icon: Icon }) => (
-  <NavLink
-    key={path}
-    to={path}
-    end={path === "/"}
-    className={({ isActive }) =>
-      `nav-link ${isActive ? "active" : ""}`
-    }
-  >
-    <Icon size={17} strokeWidth={2} />
-    {label}
-  </NavLink>
-))}
+            <NavLink
+              key={path}
+              to={path}
+              end={path === "/dashboard"}
+              className={({ isActive }) =>
+                `nav-link ${isActive ? "active" : ""}`
+              }
+            >
+              <Icon size={17} strokeWidth={2} />
+              {label}
+            </NavLink>
+          ))}
         </nav>
 
         {/* Right side */}
@@ -79,15 +129,42 @@ export default function Sidebar() {
             AI Tools
           </NavLink>
 
-          <button className="profile-button">
-            <span className="profile-avatar">D</span>
+          <div className="profile-wrapper" ref={dropdownRef}>
+            <button
+              type="button"
+              className="profile-button"
+              onClick={() => setDropdownOpen((prev) => !prev)}
+              aria-expanded={dropdownOpen}
+            >
+              <span className="profile-avatar">{avatarLetter}</span>
 
-            <span className="profile-name">
-              Dhruvi
-            </span>
+              <span className="profile-name">
+                {displayName}
+              </span>
 
-            <ChevronDown size={16} />
-          </button>
+              <ChevronDown size={16} />
+            </button>
+
+            {dropdownOpen && (
+              <div className="profile-dropdown">
+                <div className="profile-dropdown-header">
+                  <div className="profile-dropdown-name">{displayName}</div>
+                  {user?.email && (
+                    <div className="profile-dropdown-email">{user.email}</div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className="profile-logout-button"
+                  onClick={handleLogout}
+                >
+                  <LogOut size={16} />
+                  <span>Log out</span>
+                </button>
+              </div>
+            )}
+          </div>
 
         </div>
 

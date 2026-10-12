@@ -3,12 +3,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.dependencies import get_current_user
 from app.models.company import Company
+from app.models.user import User
 from app.schemas.company import CompanyCreate, CompanyResponse, CompanyUpdate
 
 router = APIRouter(
     prefix="/api/companies",
     tags=["Companies"],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -19,9 +22,11 @@ router = APIRouter(
 )
 def create_company(
     company_data: CompanyCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     company = Company(
+        user_id=current_user.id,
         name=company_data.name,
         website=str(company_data.website) if company_data.website else None,
         location=company_data.location,
@@ -39,9 +44,14 @@ def create_company(
     response_model=list[CompanyResponse],
 )
 def get_companies(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    result = db.execute(select(Company).order_by(Company.id.desc()))
+    result = db.execute(
+        select(Company)
+        .where(Company.user_id == current_user.id)
+        .order_by(Company.id.desc())
+    )
 
     return result.scalars().all()
 
@@ -52,9 +62,15 @@ def get_companies(
 )
 def get_company(
     company_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    company = db.get(Company, company_id)
+    company = db.execute(
+        select(Company).where(
+            Company.id == company_id,
+            Company.user_id == current_user.id,
+        )
+    ).scalar_one_or_none()
 
     if company is None:
         raise HTTPException(
@@ -72,9 +88,15 @@ def get_company(
 def update_company(
     company_id: int,
     company_data: CompanyUpdate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    company = db.get(Company, company_id)
+    company = db.execute(
+        select(Company).where(
+            Company.id == company_id,
+            Company.user_id == current_user.id,
+        )
+    ).scalar_one_or_none()
 
     if company is None:
         raise HTTPException(
@@ -83,6 +105,10 @@ def update_company(
         )
 
     update_data = company_data.model_dump(exclude_unset=True)
+
+    # Disallow client from altering user_id or id
+    update_data.pop("user_id", None)
+    update_data.pop("id", None)
 
     if "website" in update_data and update_data["website"] is not None:
         update_data["website"] = str(update_data["website"])
@@ -102,9 +128,15 @@ def update_company(
 )
 def delete_company(
     company_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    company = db.get(Company, company_id)
+    company = db.execute(
+        select(Company).where(
+            Company.id == company_id,
+            Company.user_id == current_user.id,
+        )
+    ).scalar_one_or_none()
 
     if company is None:
         raise HTTPException(
@@ -116,3 +148,4 @@ def delete_company(
     db.commit()
 
     return None
+

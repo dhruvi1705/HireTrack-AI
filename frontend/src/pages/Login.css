@@ -117,6 +117,8 @@
   border: 2px solid var(--border);
   font-size: 13px;
   font-weight: 700;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .login-submit {
@@ -141,8 +143,46 @@
   box-shadow: 2px 2px 0 var(--shadow);
 }
 
+.login-toggle-prompt {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-soft);
+  margin-top: 4px;
+}
+
+.login-toggle-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 6px;
+  color: var(--text);
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.login-toggle-btn:hover {
+  opacity: 0.8;
+}
+
 @media (max-width: 500px) {
   .login-card {
     padding: 24px 20px;
+  }
+}
+
+@media (max-width: 400px) {
+  .login-page {
+    padding: 16px 12px;
+  }
+
+  .login-card {
+    padding: 20px 14px;
+  }
+
+  .login-heading h1 {
+    font-size: 24px;
   }
 }
