@@ -47,3 +47,10 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    follow_ups = relationship(
+        "FollowUp",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+

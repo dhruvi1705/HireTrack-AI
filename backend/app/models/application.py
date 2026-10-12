@@ -58,3 +58,10 @@ class Application(Base):
         back_populates="application",
         cascade="all, delete-orphan",
     )
+
+    follow_ups = relationship(
+        "FollowUp",
+        back_populates="application",
+        cascade="all, delete-orphan",
+    )
+

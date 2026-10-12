@@ -11,6 +11,7 @@ from app.schemas.auth import (
     TokenResponse,
     UserResponse,
 )
+from app.services.rate_limiter import rate_limit
 from app.services.security import (
     create_access_token,
     hash_password,
@@ -27,6 +28,7 @@ router = APIRouter(
     "/register",
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit(max_requests=10, window_seconds=60))],
 )
 def register_user(
     user_data: RegisterRequest,
@@ -59,6 +61,7 @@ def register_user(
     "/signup",
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit(max_requests=10, window_seconds=60))],
 )
 def signup_user(
     user_data: RegisterRequest,
@@ -70,6 +73,7 @@ def signup_user(
 @router.post(
     "/login",
     response_model=TokenResponse,
+    dependencies=[Depends(rate_limit(max_requests=10, window_seconds=60))],
 )
 def login_user(
     login_data: LoginRequest,

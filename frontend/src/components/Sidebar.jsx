@@ -9,6 +9,7 @@ import {
   ChevronDown,
   LogOut,
   BarChart3,
+  Bell,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
@@ -41,11 +42,17 @@ const navItems = [
     icon: CalendarDays,
   },
   {
+    label: "Follow-ups",
+    path: "/follow-ups",
+    icon: Bell,
+  },
+  {
     label: "Analytics",
     path: "/analytics",
     icon: BarChart3,
   },
 ];
+
 
 export default function Sidebar() {
   const navigate = useNavigate();

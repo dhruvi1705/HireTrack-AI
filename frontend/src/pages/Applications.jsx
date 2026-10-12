@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -11,6 +12,7 @@ import {
   List,
   LayoutGrid,
 } from "lucide-react";
+
 
 import applicationService from "../services/applicationService";
 import AddApplication from "../components/AddApplication";
@@ -45,10 +47,25 @@ const STATUS_TABS = [
   { key: "withdrawn", label: "Withdrawn" },
 ];
 
+const formatDateTimeLocal = (dateValue) => {
+
+  if (!dateValue) return "";
+  try {
+    const d = new Date(dateValue);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().slice(0, 16);
+  } catch {
+    return "";
+  }
+};
+
 export default function Applications() {
+  const location = useLocation();
+
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -89,7 +106,23 @@ export default function Applications() {
       try {
         const data = await applicationService.getApplications();
         if (!ignore) {
-          setApplications(data || []);
+          const list = data || [];
+          setApplications(list);
+          if (location.state?.selectedApplicationId && list.length > 0) {
+            const match = list.find(
+              (app) => app.id === location.state.selectedApplicationId
+            );
+            if (match) {
+              setSelectedApplication(match);
+              setEditForm({
+                status: match.status || "applied",
+                applied_at: formatDateTimeLocal(
+                  match.applied_at || match.created_at
+                ),
+                notes: match.notes || "",
+              });
+            }
+          }
         }
       } catch (err) {
         if (!ignore) {
@@ -108,25 +141,16 @@ export default function Applications() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [location.state]);
+
 
   const handleApplicationCreated = async () => {
     setShowAddApplication(false);
     await loadApplications();
   };
 
-  const formatDateTimeLocal = (dateValue) => {
-    if (!dateValue) return "";
-    try {
-      const d = new Date(dateValue);
-      if (isNaN(d.getTime())) return "";
-      return d.toISOString().slice(0, 16);
-    } catch {
-      return "";
-    }
-  };
-
   const formatDate = (date) => {
+
     if (!date) return "Not specified";
     return new Date(date).toLocaleDateString("en-IN", {
       day: "2-digit",
@@ -152,6 +176,8 @@ export default function Applications() {
   };
 
   const handleCloseEdit = () => {
+
+
     if (saving || deleting) return;
     setSelectedApplication(null);
     setEditError("");

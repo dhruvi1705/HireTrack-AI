@@ -12,7 +12,9 @@ import {
   Sparkles,
   Trophy,
   Video,
+  Bell,
 } from "lucide-react";
+
 import { useNavigate } from "react-router-dom";
 
 import dashboardService from "../services/dashboardService";
@@ -211,6 +213,11 @@ export default function Dashboard() {
       .sort((a, b) => new Date(a.interview_date) - new Date(b.interview_date))
       .slice(0, 5);
   }, [interviews]);
+
+  const upcomingFollowUps = useMemo(() => {
+    return dashboardData?.upcoming_follow_ups || [];
+  }, [dashboardData]);
+
 
   const formatDate = (date) => {
     if (!date) return "Not specified";
@@ -777,7 +784,76 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* UPCOMING FOLLOW-UPS */}
+        <div className="follow-ups-dashboard-card brutalist-card">
+          <div className="section-header">
+            <div className="section-heading">
+              <Bell size={21} />
+              <h2>Upcoming Follow-ups</h2>
+            </div>
+
+            <button
+              type="button"
+              className="view-link"
+              onClick={() => navigate("/follow-ups")}
+              title="View all follow-ups"
+            >
+              View all
+              <ChevronRight size={16} />
+            </button>
+          </div>
+
+          <div className="follow-up-dashboard-list">
+            {upcomingFollowUps.length === 0 ? (
+              <div className="empty-state">
+                No upcoming follow-ups.
+              </div>
+            ) : (
+              upcomingFollowUps.map((item) => (
+                <div
+                  className={`follow-up-dashboard-item ${item.is_overdue ? "is-overdue" : ""}`}
+                  key={item.id}
+                  onClick={() =>
+                    navigate("/applications", {
+                      state: { selectedApplicationId: item.application_id },
+                    })
+                  }
+                  style={{ cursor: "pointer" }}
+                  title="Click to view associated application"
+                >
+                  <div className="company-logo">
+                    {item.company
+                      ? item.company.charAt(0).toUpperCase()
+                      : "C"}
+                  </div>
+
+                  <div className="follow-up-dashboard-info">
+                    <strong>{item.title}</strong>
+                    <span>
+                      {item.role ? `${item.role} • ` : ""}
+                      {item.company || "Company"}
+                    </span>
+                  </div>
+
+                  <div className="follow-up-dashboard-timing">
+                    {item.is_overdue && (
+                      <span className="overdue-badge">OVERDUE</span>
+                    )}
+                    <span className="follow-up-date">
+                      {formatDate(item.due_date)}
+                    </span>
+                    <span className="follow-up-time">
+                      {formatTime(item.due_date)}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
       </section>
+
 
       {/* ADD APPLICATION MODAL */}
       {showAddApplication && (

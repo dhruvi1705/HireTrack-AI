@@ -523,14 +523,16 @@
 /* ---------- Bottom Grid Sections ---------- */
 .bottom-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: 16px;
 }
 
 .recent-card,
-.interviews-card {
+.interviews-card,
+.follow-ups-dashboard-card {
   padding: 24px;
 }
+
 
 .view-link {
   display: inline-flex;
@@ -699,7 +701,110 @@
   box-shadow: 2px 2px 0 var(--shadow);
 }
 
+.follow-up-dashboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.follow-up-dashboard-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  box-shadow: 2px 2px 0 var(--shadow);
+  box-sizing: border-box;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.follow-up-dashboard-item:hover {
+  background: var(--bg);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+
+.follow-up-dashboard-item.is-overdue {
+  background: #fffdf5;
+  border-left: 5px solid #111111;
+}
+
+.follow-up-dashboard-item .company-logo {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
+}
+
+.follow-up-dashboard-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.follow-up-dashboard-info strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.follow-up-dashboard-info span {
+  display: block;
+  font-size: 11px;
+  font-family: "DM Mono", monospace;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.follow-up-dashboard-timing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-family: "DM Mono", monospace;
+  white-space: nowrap;
+}
+
+.follow-up-dashboard-timing .follow-up-date {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.follow-up-dashboard-timing .follow-up-time {
+  font-size: 11px;
+  color: var(--text-soft);
+}
+
+.overdue-badge {
+  display: inline-block;
+  background: var(--yellow);
+  border: 1px solid #111111;
+  color: #111111;
+  font-family: "DM Mono", monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 1px 4px;
+  line-height: 1.2;
+}
+
 /* ---------- Responsive ---------- */
+
 @media (max-width: 1100px) {
   .dashboard-hero {
     flex-direction: column;

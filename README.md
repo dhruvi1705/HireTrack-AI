@@ -1,1145 +1,518 @@
-\# HireTrack AI
+# HireTrack AI
 
+> Full-stack career intelligence and job application tracking platform with deterministic AI-powered insights.
 
-
-> AI-powered job application and career management platform.
-
-
-
-HireTrack AI is a full-stack web application designed to help students and job seekers organize their job applications, track application progress, manage companies and job opportunities, and eventually use AI-powered tools for resume analysis, job matching, and interview preparation.
-
-
-
-\---
-
-
-
-\## 🚀 Project Status
-
-
-
-\*\*Current Phase:\*\* Core full-stack foundation
-
-
-
-The current version includes:
-
-
-
-\- User registration and authentication
-
-\- JWT-based authentication
-
-\- Secure password hashing
-
-\- Company management
-
-\- Job management
-
-\- Job application tracking
-
-\- PostgreSQL database
-
-\- SQLAlchemy ORM
-
-\- Alembic database migrations
-
-\- RESTful FastAPI backend
-
-\- React + Vite frontend foundation
-
-
-
-AI-powered career features are planned for the next development phases.
-
-
-
-\---
-
-
-
-\## 🛠️ Tech Stack
-
-
-
-\### Frontend
-
-
-
-\- React
-
-\- Vite
-
-\- JavaScript
-
-\- React Router
-
-\- Axios
-
-
-
-\### Backend
-
-
-
-\- Python
-
-\- FastAPI
-
-\- SQLAlchemy
-
-\- Pydantic
-
-\- JWT Authentication
-
-\- Passlib / bcrypt
-
-
-
-\### Database
-
-
-
-\- PostgreSQL
-
-\- Alembic
-
-
-
-\### Development Tools
-
-
-
-\- Git
-
-\- GitHub
-
-\- VS Code
-
-\- Swagger / OpenAPI
-
-
-
-\---
-
-
-
-\## 🏗️ System Architecture
-
-
-
-```mermaid
-
-flowchart TB
-
-&#x20;   U\[User<br/>Web Browser]
-
-
-
-&#x20;   F\[React + Vite<br/>Frontend]
-
-
-
-&#x20;   A\[FastAPI<br/>Backend]
-
-
-
-&#x20;   AU\[Authentication<br/>Service]
-
-&#x20;   AP\[Application<br/>Service]
-
-&#x20;   BL\[Business<br/>Logic]
-
-
-
-&#x20;   DB\[PostgreSQL<br/>Database]
-
-
-
-&#x20;   U --> F
-
-&#x20;   F -->|REST API / HTTP| A
-
-
-
-&#x20;   A --> AU
-
-&#x20;   A --> AP
-
-&#x20;   A --> BL
-
-
-
-&#x20;   AU --> DB
-
-&#x20;   AP --> DB
-
-&#x20;   BL --> DB
-
-```
-
-
-
-\---
-
-
-
-\## 🗄️ Database Design
-
-
-
-The current HireTrack AI database contains four core entities: Users, Companies, Jobs, and Applications.
-
-
-
-```mermaid
-
-flowchart LR
-
-&#x20;   U\[Users]
-
-&#x20;   C\[Companies]
-
-&#x20;   J\[Jobs]
-
-&#x20;   A\[Applications]
-
-
-
-&#x20;   C -->|has many| J
-
-&#x20;   U -->|submits| A
-
-&#x20;   J -->|receives| A
-
-```
-
-
-
-\### Core Tables
-
-
-
-| Table | Purpose |
-
-|---|---|
-
-| Users | Stores registered user accounts and authentication information |
-
-| Companies | Stores company information |
-
-| Jobs | Stores job opportunities linked to companies |
-
-| Applications | Stores user applications and their current status |
-
-
-
-\### Relationships
-
-
-
-\- \*\*Company → Jobs:\*\* One company can have multiple job listings.
-
-\- \*\*User → Applications:\*\* One user can submit multiple applications.
-
-\- \*\*Job → Applications:\*\* One job can receive multiple applications.
-
-\- \*\*Applications\*\* connects users with the jobs they apply for.---
-
-
-
-\## ✨ Current Features
-
-
-
-\### 🔐 Authentication
-
-
-
-\- User registration
-
-\- User login
-
-\- JWT access tokens
-
-\- Password hashing using bcrypt
-
-\- Protected API endpoints
-
-\- Email validation
-
-\- Password validation
-
-\- Duplicate email prevention
-
-
-
-\### 🏢 Company Management
-
-
-
-Users can manage company information including:
-
-
-
-\- Company name
-
-\- Website
-
-\- Location
-
-
-
-Supported operations:
-
-
-
-\- Create company
-
-\- View companies
-
-\- View individual company
-
-\- Update company
-
-\- Delete company
-
-
-
-\### 💼 Job Management
-
-
-
-Jobs can be associated with companies and contain:
-
-
-
-\- Job title
-
-\- Description
-
-\- Location
-
-\- Employment type
-
-\- Salary range
-
-\- Company
-
-
-
-Supported operations:
-
-
-
-\- Create job
-
-\- View jobs
-
-\- View individual job
-
-\- Update job
-
-\- Delete job
-
-
-
-### 📋 Application Tracking
-
-Users can track their applications through different stages:
-
-```mermaid
-flowchart TB
-    S[Saved]
-    A[Applied]
-    SC[Screening]
-    I[Interview]
-    O[Offer]
-
-    S --> A
-    A --> SC
-    SC --> I
-    I --> O
-```
-
-Other supported states include:
-
-- Rejected
-- Withdrawn
-
-Application data includes:
-
-- Job
-- Status
-- Application date
-- Notes
-- Created date
-- Updated date
+HireTrack AI is a full-stack career management platform designed to help job seekers organize their pipeline, track interview schedules, manage proactive outreach reminders, and leverage targeted AI tools for resume auditing, job matching, interview preparation, and cover letter generation. Built with a high-contrast Neo-Brutalist design system, the application enforces strict per-user data isolation across every query and mutation.
 
 ---
 
+## Key Features
 
-\## 🔑 Authentication Flow
+- **Multi-User Authentication & Data Isolation:** Secure JWT authentication with bcrypt password hashing. All companies, jobs, applications, interviews, follow-ups, and analytics are strictly isolated to the authenticated user.
+- **Visual Application Pipeline:** Interactive Kanban-style tracker and list views spanning key application stages: *Not Started (Saved)*, *Applied*, *Screening*, *Interview*, *Offered*, *Rejected*, and *Withdrawn*.
+- **Executive Dashboard:** Live metrics displaying total applications, scheduled interviews, active offers, pending follow-ups, an application pipeline funnel, recent submissions, upcoming interviews, and nearest pending reminders.
+- **Follow-ups & Reminders:** Schedule outreach deadlines, recruiter check-ins, and post-interview thank-you notes. Filter by *Pending*, *Completed*, or derived *Overdue* status with one-click completion toggles and application deep-linking.
+- **Interview Tracking & Scheduling:** Log technical, behavioral, HR, screening, and final rounds with dates, times, meeting links, and preparation notes.
+- **Resume Analyzer with PDF Parsing:** Extract text directly from uploaded PDF resumes or pasted text. Detects standard sections, identifies technical competencies, scores overall resume strength, and provides concrete improvement recommendations.
+- **Resume-to-Job Match Scoring:** Compares applicant skill sets against job descriptions to calculate alignment percentages, identify matching competencies, and pinpoint missing keywords.
+- **Interview Question Generator:** Produces structured interview questions categorized into Technical, Role-Specific, Behavioral, and HR domains tailored to specific job opportunities or scheduled interviews.
+- **Cover Letter Generator:** Synthesizes candidate experience with target company and role requirements to produce tailored cover letters.
+- **Job Search Analytics:** Visual funnel and conversion metrics (application-to-interview rates, interview-to-offer rates, rejection rates, and stage breakdowns).
+- **Graceful AI Fallback:** When Gemini API keys are absent or rate-limited, the backend automatically falls back to deterministic heuristic analyzers—guaranteeing zero application downtime.
 
+---
 
+## Application Screenshots
+
+> *Screenshots can be stored in `docs/screenshots/` and referenced below. Replace placeholders with genuine screen captures of the running application.*
+
+| Dashboard & Metrics | Application Pipeline |
+| :---: | :---: |
+| ![Dashboard Placeholder](https://via.placeholder.com/600x340/fcfbf7/111111?text=Dashboard+%26+Pipeline+Summary) | ![Pipeline Placeholder](https://via.placeholder.com/600x340/fcfbf7/111111?text=Application+Tracker+%26+Kanban) |
+
+| Follow-ups & Reminders | AI Career Tools |
+| :---: | :---: |
+| ![Follow-ups Placeholder](https://via.placeholder.com/600x340/fcfbf7/111111?text=Follow-ups+%26+Reminders) | ![AI Tools Placeholder](https://via.placeholder.com/600x340/fcfbf7/111111?text=Resume+Analyzer+%26+Job+Match) |
+
+*To add screenshots:*
+1. Capture PNG screenshots of each page at `1440x900` resolution.
+2. Save them to `docs/screenshots/dashboard.png`, `docs/screenshots/applications.png`, `docs/screenshots/follow_ups.png`, and `docs/screenshots/ai_tools.png`.
+3. Update the markdown image links above.
+
+---
+
+## Technology Stack
+
+### Frontend
+- **Framework:** React 19 with Vite 8
+- **Routing:** React Router v7
+- **HTTP Client:** Axios
+- **Iconography:** Lucide React
+- **Design System:** Neo-Brutalism using Vanilla CSS
+  - Surface: `#ffffff`
+  - Background: `#fcfbf7` / `#f7f3ee`
+  - Accent: `#f5c518` / `#f7cf55`
+  - Typography & Borders: `#111111` / `#29231f`
+  - Shadows: `3px 3px 0 #111` hard-edged offset, zero border radius
+  - Typography: Google Fonts (*DM Sans* & *DM Mono*)
+- **Code Quality:** ESLint 10
+
+### Backend
+- **Framework:** Python 3.10+ with FastAPI
+- **ASGI Server:** Uvicorn
+- **ORM & Database Toolkit:** SQLAlchemy 2.0
+- **Database Migrations:** Alembic
+- **Validation & Schemas:** Pydantic v2 & Pydantic-Settings
+- **Authentication & Security:** Python-Jose (JWT), Passlib with bcrypt
+- **PDF Extraction:** PyPDF 5.x
+- **Testing:** Pytest with HTTPX / Starlette TestClient
+
+### Database
+- **Engine:** PostgreSQL 14+
+- **Driver:** Psycopg2-binary
+
+### AI Integration
+- **SDK:** Google GenAI SDK (`google-genai`)
+- **Models Supported:** `gemini-3.5-flash`, `gemini-flash-latest`
+- **Fallback Architecture:** Local keyword dictionary and heuristic analyzers (no external API calls required in standard mode)
+
+---
+
+## Architecture
+
+HireTrack AI uses a decoupled client-server architecture. The React frontend interacts with the FastAPI backend over RESTful JSON endpoints. Every protected request includes a Bearer JWT in the `Authorization` header, validated by FastAPI dependency injection.
 
 ```mermaid
-
 flowchart TB
+    subgraph Client["Frontend (React 19 + Vite)"]
+        UI["Neo-Brutalist UI Pages"]
+        AuthSvc["Auth Service (JWT Storage)"]
+        ApiClients["Axios Service Layer"]
+        UI --> ApiClients
+        AuthSvc -.->|"Bearer Token"| ApiClients
+    end
 
-&#x20;   U\[User]
+    subgraph API["Backend (FastAPI)"]
+        Deps["Auth Dependency (get_current_user)"]
+        Routers["Routers: Auth | Applications | Jobs | Companies | Interviews | Follow-ups | Analytics | AI | Dashboard"]
+        GeminiSvc["Gemini Service (Enhanced Mode)"]
+        FallbackSvc["Heuristic Analyzer (Standard Mode)"]
+        
+        ApiClients -->|"HTTP Requests"| Routers
+        Routers --> Deps
+        Routers --> GeminiSvc
+        GeminiSvc -->|"On Quota / Offline"| FallbackSvc
+    end
 
-
-
-&#x20;   R\[Register]
-
-&#x20;   V\[Validate Input]
-
-&#x20;   H\[Password Hashing]
-
-&#x20;   D\[(PostgreSQL)]
-
-
-
-&#x20;   L\[Login]
-
-&#x20;   VP\[Verify Password]
-
-&#x20;   JWT\[Generate JWT]
-
-&#x20;   AUTH\[Authenticated API Requests]
-
-
-
-&#x20;   U --> R
-
-&#x20;   R --> V
-
-&#x20;   V --> H
-
-&#x20;   H --> D
-
-
-
-&#x20;   U --> L
-
-&#x20;   L --> VP
-
-&#x20;   VP --> JWT
-
-&#x20;   JWT --> AUTH
-
+    subgraph DataStore["Data Layer"]
+        Models["SQLAlchemy ORM Models"]
+        DB[("PostgreSQL Database")]
+        
+        Routers --> Models
+        Models --> DB
+    end
 ```
 
-\---
+### Data Isolation Model
+Each table (`companies`, `jobs`, `applications`, `interviews`, `follow_ups`) is linked via foreign keys directly or indirectly to `users.id`. All database queries filter explicitly by `user_id == current_user.id`. Cascading deletions ensure that deleting a company or application safely cleans up related child records.
 
+---
 
-
-\## 📡 API Endpoints
-
-
-
-\### Authentication
-
-
-
-| Method | Endpoint | Description |
-
-|--------|----------|-------------|
-
-| POST | `/api/auth/register` | Register a new user |
-
-| POST | `/api/auth/login` | Login and receive JWT |
-
-
-
-\### Companies
-
-
-
-| Method | Endpoint | Description |
-
-|--------|----------|-------------|
-
-| POST | `/api/companies/` | Create company |
-
-| GET | `/api/companies/` | Get companies |
-
-| GET | `/api/companies/{id}` | Get company |
-
-| PUT | `/api/companies/{id}` | Update company |
-
-| DELETE | `/api/companies/{id}` | Delete company |
-
-
-
-\### Jobs
-
-
-
-| Method | Endpoint | Description |
-
-|--------|----------|-------------|
-
-| POST | `/api/jobs/` | Create job |
-
-| GET | `/api/jobs/` | Get jobs |
-
-| GET | `/api/jobs/{id}` | Get job |
-
-| PUT | `/api/jobs/{id}` | Update job |
-
-| DELETE | `/api/jobs/{id}` | Delete job |
-
-
-
-\### Applications
-
-
-
-| Method | Endpoint | Description |
-
-|--------|----------|-------------|
-
-| POST | `/api/applications/` | Create application |
-
-| GET | `/api/applications/` | Get current user's applications |
-
-| GET | `/api/applications/{id}` | Get application |
-
-| PUT | `/api/applications/{id}` | Update application |
-
-| DELETE | `/api/applications/{id}` | Delete application |
-
-
-
-\---
-
-
-
-\## 📖 API Documentation
-
-
-
-HireTrack AI uses FastAPI's automatically generated OpenAPI documentation.
-
-
-
-After starting the backend, open:
-
-
-
-```text
-
-http://127.0.0.1:8000/docs
+## Project Structure
 
 ```
-
-
-
-Swagger UI allows developers to:
-
-
-
-\- Explore API endpoints
-
-\- Test API requests
-
-\- Authenticate using JWT
-
-\- View request schemas
-
-\- View response schemas
-
-
-
-\---
-
-
-
-\## ⚙️ Project Structure
-
-
-
-```text
-
 HireTrack-AI/
-
-│
-
-├── frontend/
-
-│   ├── src/
-
-│   ├── public/
-
-│   ├── package.json
-
-│   └── vite.config.js
-
-│
-
 ├── backend/
-
-│   ├── app/
-
-│   │   ├── models/
-
-│   │   ├── routers/
-
-│   │   ├── schemas/
-
-│   │   ├── services/
-
-│   │   ├── database.py
-
-│   │   ├── dependencies.py
-
-│   │   └── main.py
-
-│   │
-
 │   ├── alembic/
-
-│   │   └── versions/
-
-│   │
-
-│   ├── .env.example
-
+│   │   ├── versions/
+│   │   │   ├── 6cddd2512e9b_create_core_hiretrack_tables.py
+│   │   │   ├── 7cbd33e3b3a1_add_interviews_table.py
+│   │   │   ├── 239aa43b06e5_add_user_id_to_companies.py
+│   │   │   └── 7ab07b11c012_create_follow_ups_table.py
+│   │   ├── env.py
+│   │   └── script.py.mako
+│   ├── app/
+│   │   ├── models/
+│   │   │   ├── __init__.py
+│   │   │   ├── application.py
+│   │   │   ├── company.py
+│   │   │   ├── follow_up.py
+│   │   │   ├── interview.py
+│   │   │   ├── job.py
+│   │   │   └── user.py
+│   │   ├── routers/
+│   │   │   ├── __init__.py
+│   │   │   ├── ai.py
+│   │   │   ├── analytics.py
+│   │   │   ├── applications.py
+│   │   │   ├── auth.py
+│   │   │   ├── companies.py
+│   │   │   ├── dashboard.py
+│   │   │   ├── follow_ups.py
+│   │   │   ├── interviews.py
+│   │   │   └── jobs.py
+│   │   ├── schemas/
+│   │   │   ├── __init__.py
+│   │   │   ├── ai.py
+│   │   │   ├── analytics.py
+│   │   │   ├── application.py
+│   │   │   ├── auth.py
+│   │   │   ├── company.py
+│   │   │   ├── follow_up.py
+│   │   │   ├── interview.py
+│   │   │   └── job.py
+│   │   ├── services/
+│   │   │   ├── gemini_service.py
+│   │   │   └── security.py
+│   │   ├── database.py
+│   │   ├── dependencies.py
+│   │   └── main.py
+│   ├── tests/
+│   │   ├── test_data_isolation.py
+│   │   ├── test_follow_ups.py
+│   │   ├── test_gemini_integration.py
+│   │   └── test_resume_pdf.py
 │   ├── alembic.ini
-
-│   └── requirements.txt
-
-│
-
+│   ├── requirements.txt
+│   └── .env.example
 ├── docs/
-
-├── .gitignore
-
+├── frontend/
+│   ├── public/
+│   │   ├── favicon.svg
+│   │   └── icons.svg
+│   ├── src/
+│   │   ├── assets/
+│   │   │   └── hero.png
+│   │   ├── components/
+│   │   │   ├── AddApplication.jsx / .css
+│   │   │   ├── InterviewPreparationModal.jsx / .css
+│   │   │   ├── Sidebar.jsx / .css
+│   │   │   └── ...
+│   │   ├── layouts/
+│   │   │   └── DashboardLayout.jsx
+│   │   ├── pages/
+│   │   │   ├── AiTools.jsx / .css
+│   │   │   ├── Analytics.jsx / .css
+│   │   │   ├── Applications.jsx / .css
+│   │   │   ├── Companies.jsx / .css
+│   │   │   ├── Dashboard.jsx / .css
+│   │   │   ├── FollowUps.jsx / .css
+│   │   │   ├── Interviews.jsx / .css
+│   │   │   ├── Jobs.jsx / .css
+│   │   │   ├── LaunchPage.jsx / .css
+│   │   │   └── Login.jsx / .css
+│   │   ├── services/
+│   │   │   ├── aiService.js
+│   │   │   ├── analyticsService.js
+│   │   │   ├── api.js
+│   │   │   ├── applicationService.js
+│   │   │   ├── authService.js
+│   │   │   ├── companyService.js
+│   │   │   ├── dashboardService.js
+│   │   │   ├── followUpService.js
+│   │   │   ├── interviewService.js
+│   │   │   └── jobService.js
+│   │   ├── styles/
+│   │   │   ├── common.css
+│   │   │   └── variables.css
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── eslint.config.js
+│   ├── package.json
+│   ├── vite.config.js
+│   └── .env.example
 └── README.md
-
 ```
 
+---
 
+## Prerequisites
 
-\---
+- **Python:** 3.10 to 3.14
+- **Node.js:** 18.x or 20+ (tested on Node v24)
+- **PostgreSQL:** 14 or higher
+- **Package Managers:** `pip` (Python) and `npm` (Node.js)
 
+---
 
+## Installation and Local Setup
 
-\## 💻 Local Setup
-
-
-
-\### 1. Clone the Repository
-
-
-
+### 1. Clone Repository
 ```bash
-
-git clone https://github.com/YOUR\_USERNAME/HireTrack-AI.git
-
+git clone https://github.com/dhruvi1705/HireTrack-AI.git
 cd HireTrack-AI
-
 ```
 
-
-
-\### 2. Backend Setup
-
-
-
+### 2. Backend Setup
 ```bash
-
 cd backend
 
-```
+# Create virtual environment
+python -m venv .venv
 
+# Activate virtual environment
+# Windows (PowerShell):
+.\.venv\Scripts\Activate.ps1
+# macOS / Linux:
+source .venv/bin/activate
 
-
-Create a virtual environment:
-
-
-
-```bash
-
-py -m venv .venv
-
-```
-
-
-
-Activate it on Windows:
-
-
-
-```powershell
-
-.\\.venv\\Scripts\\Activate.ps1
-
-```
-
-
-
-Install dependencies:
-
-
-
-```bash
-
+# Install dependencies
 pip install -r requirements.txt
-
 ```
 
+### 3. Configure Database and Environment
+1. Create a PostgreSQL database (e.g., named `hiretrack_db`):
+   ```sql
+   CREATE DATABASE hiretrack_db;
+   ```
+2. Copy the example environment file and update with your credentials:
+   ```bash
+   cp .env.example .env
+   ```
+3. Run Alembic migrations to apply all database tables:
+   ```bash
+   alembic upgrade head
+   ```
 
-
-\### 3. Configure Environment Variables
-
-
-
-Create:
-
-
-
-```text
-
-backend/.env
-
-```
-
-
-
-Use `.env.example` as the template.
-
-
-
-Example:
-
-
-
-```env
-
-DATABASE\_URL=postgresql+psycopg2://postgres:YOUR\_PASSWORD@localhost:5432/hiretrack\_db
-
-
-
-JWT\_SECRET\_KEY=YOUR\_SECRET\_KEY
-
-JWT\_ALGORITHM=HS256
-
-JWT\_ACCESS\_TOKEN\_EXPIRE\_MINUTES=60
-
-```
-
-
-
-\*\*Never commit your real `.env` file or secrets to GitHub.\*\*
-
-
-
-\### 4. Run Database Migrations
-
-
-
+### 4. Start the Backend API
 ```bash
-
-alembic upgrade head
-
+uvicorn app.main:app --reload --port 8000
 ```
+The FastAPI server will start at `http://localhost:8000`. Swagger documentation is available at `http://localhost:8000/docs`.
 
-
-
-\### 5. Start the Backend
-
-
-
-From the `backend` directory:
-
-
-
+### 5. Frontend Setup
+Open a new terminal window:
 ```bash
-
-uvicorn app.main:app --reload
-
-```
-
-
-
-Backend:
-
-
-
-```text
-
-http://127.0.0.1:8000
-
-```
-
-
-
-Swagger documentation:
-
-
-
-```text
-
-http://127.0.0.1:8000/docs
-
-```
-
-
-
-\### 6. Start the Frontend
-
-
-
-Open another terminal:
-
-
-
-```bash
-
 cd frontend
 
+# Install Node dependencies
 npm install
 
+# Copy environment configuration
+cp .env.example .env
+
+# Start Vite dev server
 npm run dev
-
 ```
+The frontend application will be running at `http://localhost:5173`.
 
+---
 
+## Environment Variables
 
-\---
+### Backend (`backend/.env`)
+Create a `.env` file in the `backend/` directory based on `.env.example`:
 
+| Variable | Description | Required | Example |
+| :--- | :--- | :---: | :--- |
+| `DATABASE_URL` | PostgreSQL SQLAlchemy connection URL | **Yes** | `postgresql+psycopg2://postgres:password@localhost:5432/hiretrack_db` |
+| `JWT_SECRET_KEY` | Secret key used for signing HS256 tokens | **Yes** | `your-secure-random-secret-key-32-chars-min` |
+| `JWT_ALGORITHM` | Algorithm for JWT encoding | No | `HS256` (default) |
+| `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | Expiration time for access tokens | No | `60` (default) |
+| `GEMINI_API_KEY` | Google Gemini API key for enhanced AI features | Optional | `your_gemini_api_key` |
+| `GEMINI_MODEL` | Gemini model name | Optional | `gemini-3.5-flash` (default) |
 
+> *Note: If `GEMINI_API_KEY` is not provided, all AI tools automatically function in Standard Mode using deterministic local analyzers.*
 
-\## 🔒 Security
+### Frontend (`frontend/.env`)
+Create a `.env` file in the `frontend/` directory based on `.env.example`:
 
+| Variable | Description | Required | Example |
+| :--- | :--- | :---: | :--- |
+| `VITE_API_BASE_URL` | Base URL of the FastAPI backend | Optional | `http://localhost:8000` (default) |
 
+---
 
-The current backend implements:
+## API Overview
 
+When the backend is running, complete interactive OpenAPI documentation is accessible at `http://localhost:8000/docs`.
 
+### Authentication (`/api/auth`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Register a new user account |
+| `POST` | `/api/auth/login` | Authenticate and obtain JWT access token |
+| `GET` | `/api/auth/me` | Fetch authenticated user profile |
 
-\- JWT authentication
+### Companies (`/api/companies`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/companies/` | List all companies for authenticated user |
+| `POST` | `/api/companies/` | Create a company |
+| `GET` | `/api/companies/{id}` | Get company by ID |
+| `PUT` | `/api/companies/{id}` | Update company details |
+| `DELETE` | `/api/companies/{id}` | Delete company (cascades linked records) |
 
-\- Bcrypt password hashing
+### Jobs (`/api/jobs`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/jobs/` | List all jobs for authenticated user |
+| `POST` | `/api/jobs/` | Create a job under a company |
+| `GET` | `/api/jobs/{id}` | Get job details |
+| `PUT` | `/api/jobs/{id}` | Update job title, description, or compensation |
+| `DELETE` | `/api/jobs/{id}` | Delete job |
 
-\- Protected application endpoints
+### Applications (`/api/applications`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/applications/` | List all tracked job applications |
+| `POST` | `/api/applications/` | Submit new application entry |
+| `GET` | `/api/applications/{id}` | Retrieve application details |
+| `PUT` | `/api/applications/{id}` | Update stage, notes, or applied date |
+| `DELETE` | `/api/applications/{id}` | Delete application (cascades interviews & follow-ups) |
 
-\- Pydantic input validation
+### Interviews (`/api/interviews`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/interviews/` | List scheduled & completed interviews |
+| `POST` | `/api/interviews/` | Schedule interview round for an application |
+| `GET` | `/api/interviews/{id}` | Retrieve interview details |
+| `PUT` | `/api/interviews/{id}` | Update interview timing, status, notes, or meeting link |
+| `DELETE` | `/api/interviews/{id}` | Delete interview |
 
-\- Email validation
+### Follow-ups & Reminders (`/api/follow-ups`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/follow-ups/?status={pending\|completed\|overdue\|all}` | Filtered follow-up list with dynamic overdue calculation |
+| `POST` | `/api/follow-ups/` | Create follow-up reminder for an application |
+| `GET` | `/api/follow-ups/{id}` | Retrieve follow-up details |
+| `PUT` | `/api/follow-ups/{id}` | Update follow-up status, due date, title, or description |
+| `DELETE` | `/api/follow-ups/{id}` | Delete follow-up |
 
-\- Password length validation
+### Dashboard & Analytics
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/dashboard/summary` | Aggregated dashboard stats, pipeline, upcoming interviews, and nearest pending reminders |
+| `GET` | `/api/analytics/summary` | Funnel conversion metrics, stage counts, and response rates |
 
-\- Environment-based configuration
+### AI Career Tools (`/api/ai`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/ai/status` | Current AI provider status (Enhanced vs Standard Mode) |
+| `POST` | `/api/ai/resume-analyzer` | Parse PDF or text resume; score and evaluate sections |
+| `POST` | `/api/ai/job-match` | Compare resume skills against job requirements |
+| `POST` | `/api/ai/interview-questions` | Generate interview preparation questions by category |
+| `POST` | `/api/ai/cover-letter` | Generate tailored cover letter |
 
-\- Secret exclusion through `.gitignore`
+---
 
-\- User-specific application access
+## AI Functionality & Deterministic Fallback
 
+HireTrack AI integrates with the official Google GenAI SDK (`google-genai`) while ensuring deterministic reliability through local fallback heuristics:
 
+1. **Resume Analyzer:** Accepts uploaded PDF files (via `pypdf`) or pasted text. Detects standard sections (*Summary*, *Experience*, *Education*, *Skills*, *Projects*, *Certifications*), extracts technical skills against a built-in industry keyword dictionary, generates an objective strength score (15–98), and flags concrete areas for improvement.
+2. **Job Match Score:** Analyzes skill overlaps and omissions between candidate resumes and job descriptions to output a percentage score, matching keywords, and missing qualifications.
+3. **Interview Preparation Workflow:** Accessible directly from any scheduled interview. Tailors technical, role-specific, behavioral, and HR questions based on the exact job requirements.
+4. **Cover Letter Generator:** Constructs professional, personalized cover letters highlighting role alignment and applicant competencies.
 
-\---
+### Fallback Architecture
+- **Gemini Enhanced Mode:** Activates when `GEMINI_API_KEY` is provided, querying models such as `gemini-3.5-flash` or `gemini-flash-latest` with structured JSON schemas.
+- **Standard Analysis Mode:** If the API key is not configured, quota is exhausted, or the network is unavailable, the backend automatically transitions to deterministic algorithmic generators.
+- **No Autonomous Agent:** HireTrack AI operates strictly as request-response generative utilities; it does not deploy autonomous background agents, web scrapers, or uncontrolled background tasks.
 
+---
 
+## Database and Migrations
 
-\## 🧪 Database Migrations
+HireTrack AI uses Alembic for declarative, version-controlled PostgreSQL schema migrations.
 
+### Migration History
+1. `6cddd2512e9b` — Initial schema (`users`, `companies`, `jobs`, `applications`)
+2. `7cbd33e3b3a1` — Added `interviews` table with foreign key cascade
+3. `239aa43b06e5` — Added `user_id` foreign key constraint to `companies`
+4. `7ab07b11c012` — Added `follow_ups` table with check constraints and index optimizations
 
-
-Alembic is used to manage database schema changes.
-
-
-
-Create a migration:
-
-
-
+### Migration Commands
 ```bash
+cd backend
 
-alembic revision --autogenerate -m "description"
-
-```
-
-
-
-Apply migrations:
-
-
-
-```bash
-
-alembic upgrade head
-
-```
-
-
-
-Check the current migration:
-
-
-
-```bash
-
+# View current migration state
 alembic current
 
-```
-
-
-
-Check for schema differences:
-
-
-
-```bash
-
+# Verify schema synchronization (checks for unmigrated drift)
 alembic check
 
+# Apply all pending migrations
+alembic upgrade head
+
+# Rollback one migration
+alembic downgrade -1
 ```
 
+> *Caution: Never drop or recreate tables directly in production; always use Alembic migrations to preserve relational integrity.*
 
+---
 
-\---
+## Testing and Quality Verification
 
+The project includes an end-to-end regression test suite covering authentication, multi-user data isolation, cascading deletions, PDF parsing, follow-up operations, overdue calculations, and AI fallback behavior.
 
-
-\## 🔮 Planned AI Features
-
-
-
-The next development phase will introduce AI-powered career assistance.
-
-
-
-\### 🤖 Resume Analysis
-
-
-
-Analyze uploaded resumes and extract:
-
-
-
-\- Skills
-
-\- Education
-
-\- Experience
-
-\- Projects
-
-\- Technologies
-
-
-
-\### 🎯 Job-Resume Matching
-
-
-
-Compare a candidate's resume with a job description and identify:
-
-
-
-\- Matching skills
-
-\- Missing skills
-
-\- Relevant experience
-
-\- Job compatibility
-
-
-
-\### 📄 AI Resume Tailoring
-
-
-
-Generate job-specific resume suggestions based on a selected job description.
-
-
-
-\### 🧠 Skill Gap Analysis
-
-
-
-Identify skills that may be useful for a target role and suggest areas for improvement.
-
-
-
-\### 🎤 Interview Preparation
-
-
-
-Generate role-specific interview questions and provide structured feedback.
-
-
-
-\### 📊 Career Analytics
-
-
-
-Provide insights such as:
-
-
-
-\- Applications by status
-
-\- Interview conversion
-
-\- Application trends
-
-\- Frequently targeted roles
-
-\- Skill demand
-
-
-
-\---
-
-
-
-\## 🗺️ Development Roadmap
-
-
-
-```mermaid
-
-flowchart LR
-
-&#x20;   P1\[Phase 1<br/>Core Backend]
-
-&#x20;   P2\[Phase 2<br/>Frontend]
-
-&#x20;   P3\[Phase 3<br/>AI Integration]
-
-&#x20;   P4\[Phase 4<br/>Production]
-
-
-
-&#x20;   P1 --> P2
-
-&#x20;   P2 --> P3
-
-&#x20;   P3 --> P4
-
+### Run Backend Tests
+```bash
+cd backend
+pytest tests/ -v
 ```
-
-
-
-\### Phase 1 — Core Backend
-
-
-
-\- FastAPI
-
-\- PostgreSQL
-
-\- SQLAlchemy
-
-\- Alembic
-
-\- Authentication
-
-\- Companies
-
-\- Jobs
-
-\- Applications
-
-
-
-\### Phase 2 — Frontend
-
-
-
-\- Authentication UI
-
-\- Dashboard
-
-\- Job management
-
-\- Application Kanban
-
-\- Analytics
-
-
-
-\### Phase 3 — AI Integration
-
-
-
-\- Resume parsing
-
-\- Job matching
-
-\- Skill gap analysis
-
-\- Resume tailoring
-
-\- Interview assistant
-
-
-
-\### Phase 4 — Production
-
-
-
-\- Docker
-
-\- CI/CD
-
-\- Automated testing
-
-\- Deployment
-
-\- Monitoring
-
-
-
-\---
-
-
-
-\## 🎯 Project Goals
-
-
-
-HireTrack AI aims to provide a centralized platform for managing the job search process while reducing the manual effort involved in organizing applications, understanding job requirements, tailoring resumes, and preparing for interviews.
-
-
-
-\---
-
-
-
-\## 👩‍💻 Author
-
-
-
-\*\*Dhruvi Khatri\*\*
-
-
-
-B.Tech – Full-Stack Development
-
-
-
-GitHub: `https://github.com/dhruvi1705`
-
-
-
-Portfolio: `https://dhruvi1705.github.io/portfolio/`
-
-
-
-\---
-
-
-
-\## 📄 License
-
-
-
-This project is currently developed as a personal/academic portfolio project.
-
+**Verified Results:** **39 passed**, 0 failures across:
+- `test_auth_rate_limit.py` (5 tests)
+- `test_data_isolation.py` (7 tests)
+- `test_follow_ups.py` (7 tests)
+- `test_gemini_integration.py` (13 tests)
+- `test_resume_pdf.py` (7 tests)
+
+### Run Frontend Linting
+```bash
+cd frontend
+npm run lint
+```
+**Verified Results:** **0 errors, 0 warnings** (ESLint 10 with React 19 rules).
+
+### Run Frontend Production Build
+```bash
+cd frontend
+npm run build
+```
+**Verified Results:** Built production bundle cleanly via Vite in **< 1 second**.
+
+### Check Database Schema Sync
+```bash
+cd backend
+alembic check
+```
+**Verified Results:** `No new upgrade operations detected.` (Zero schema drift).
+
+---
+
+## Security and Privacy
+
+- **Per-User Isolation:** Every read, creation, update, and deletion is checked against `current_user.id`. Cross-user data snooping or ID manipulation yields a strict `404 Not Found`.
+- **Password Security:** Passwords are hashed using `bcrypt` via Passlib; plain text passwords are never stored or logged.
+- **Stateless JWT Tokens:** Authentication tokens are signed with HMAC-SHA256 and verified on every protected request.
+- **Input Sanitization & Validation:** All request payloads are strictly validated using Pydantic schemas.
+- **Server-Side API Keys:** The Google Gemini API key resides solely on the backend server and is never exposed to client browsers.
+- **Safe Environment Handling:** Real credential files (`.env`) are explicitly ignored by `.gitignore`.
+
+---
+
+## Current Status and Future Improvements
+
+### Implemented & Verified
+- Complete multi-user auth and JWT session management
+- Companies, Jobs, Applications, and Interviews CRUD
+- Follow-ups & Reminders with dynamic overdue detection and completion tracking
+- Unified Dashboard with Upcoming Interviews and Upcoming Follow-ups
+- Resume Analyzer supporting both PDF upload and raw text
+- Job Match scoring and gap analysis
+- Interview question generator and cover letter generator
+- End-to-end automated testing suite and zero-drift database migrations
+
+### Planned Enhancements
+- Export application history to CSV / Excel
+- Email and calendar notification integrations (e.g., Google Calendar, Outlook)
+- Dark mode theme toggle
+- Drag-and-drop Kanban pipeline board
+
+---
+
+## License
+
+This repository does not currently include an open-source license. All rights are reserved by the repository owner.

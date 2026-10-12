@@ -7,8 +7,10 @@ from app.dependencies import get_current_user
 from app.models.application import Application
 from app.models.company import Company
 from app.models.interview import Interview
+from app.models.follow_up import FollowUp
 from app.models.job import Job
 from app.models.user import User
+
 
 router = APIRouter(
     prefix="/api/dashboard",
@@ -70,6 +72,17 @@ def get_dashboard_summary(
         )
         or 0
     )
+
+    follow_up_count = (
+        db.scalar(
+            select(func.count(FollowUp.id)).where(
+                FollowUp.user_id == current_user.id,
+                FollowUp.status == "pending",
+            )
+        )
+        or 0
+    )
+
 
     # -----------------------------------------
     # Pipeline counts
@@ -165,6 +178,42 @@ def get_dashboard_summary(
             }
         )
 
+    # -----------------------------------------
+    # Upcoming follow-ups (Real database data)
+    # -----------------------------------------
+
+    follow_up_rows = db.execute(
+        select(FollowUp, Application, Job, Company)
+        .join(Application, FollowUp.application_id == Application.id)
+        .join(Job, Application.job_id == Job.id)
+        .join(Company, Job.company_id == Company.id)
+        .where(
+            FollowUp.user_id == current_user.id,
+            Application.user_id == current_user.id,
+            Company.user_id == current_user.id,
+            FollowUp.status == "pending",
+        )
+        .order_by(FollowUp.due_date.asc())
+        .limit(5)
+    ).all()
+
+    upcoming_follow_ups = []
+    for follow_up, application, job, company in follow_up_rows:
+        due = follow_up.due_date if follow_up.due_date.tzinfo else follow_up.due_date.replace(tzinfo=timezone.utc)
+        upcoming_follow_ups.append(
+            {
+                "id": follow_up.id,
+                "application_id": application.id,
+                "title": follow_up.title,
+                "description": follow_up.description,
+                "due_date": follow_up.due_date,
+                "status": follow_up.status,
+                "company": company.name,
+                "role": job.title,
+                "is_overdue": due < now,
+            }
+        )
+
     return {
         "user": {
             "id": current_user.id,
@@ -177,9 +226,12 @@ def get_dashboard_summary(
             "companies": total_companies,
             "interviews": interview_count,
             "offers": offer_count,
+            "follow_ups": follow_up_count,
         },
         "pipeline": pipeline,
         "recent_applications": recent_applications,
         "upcoming_interviews": upcoming_interviews,
+        "upcoming_follow_ups": upcoming_follow_ups,
     }
+
 

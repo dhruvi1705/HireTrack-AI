@@ -32,8 +32,32 @@ const authService = {
   },
 
   logout() {
-    localStorage.removeItem("hiretrack_token");
-    localStorage.removeItem("hiretrack_token_type");
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith("hiretrack_")) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach((key) => {
+          try {
+            localStorage.removeItem(key);
+          } catch {
+            // Safe fallback if single key removal fails
+          }
+        });
+      }
+    } catch {
+      // Safe fallback if iterating localStorage fails
+      try {
+        localStorage.removeItem("hiretrack_token");
+        localStorage.removeItem("hiretrack_token_type");
+      } catch {
+        // no-op
+      }
+    }
   },
 
   getToken() {
