@@ -309,6 +309,7 @@ Create a `.env` file in the `backend/` directory based on `.env.example`:
 | `JWT_SECRET_KEY` | Secret key used for signing HS256 tokens | **Yes** | `your-secure-random-secret-key-32-chars-min` |
 | `JWT_ALGORITHM` | Algorithm for JWT encoding | No | `HS256` (default) |
 | `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | Expiration time for access tokens | No | `60` (default) |
+| `CORS_ORIGINS` | Comma-separated allowed frontend origins | No | `http://localhost:5173,http://127.0.0.1:5173` (default) |
 | `GEMINI_API_KEY` | Google Gemini API key for enhanced AI features | Optional | `your_gemini_api_key` |
 | `GEMINI_MODEL` | Gemini model name | Optional | `gemini-3.5-flash` (default) |
 
